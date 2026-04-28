@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>בחזרה לעתיד — אשף מסע v2.0</title>
+<title>בחזרה לעתיד — אשף מסע v2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -119,7 +119,7 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
   <div class="header">
     <h1>🗺️ בחזרה לעתיד</h1>
     <p>אשף יצירת גיליון מסע</p>
-    <span class="version-tag">v2.0</span>
+    <span class="version-tag">v2.1</span>
   </div>
   <div class="card" id="card">
     <div class="steps-bar" id="stepsBar"></div>
@@ -132,7 +132,7 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
 //  CONFIG — הגדר כאן לפני השימוש
 // ══════════════════════════════════════════════════════════════
 const CONFIG = {
-  CLIENT_ID: '58131099622-0k834k0setbev2m18pv7vb3enh3bc8tr.apps.googleusercontent.com',
+  CLIENT_ID: '',          // ← הדבק כאן את ה-Client ID שלך
   FOLDER_ID: '',          // ← (אופציונלי) ID של תיקיית Drive ליצירת הגיליון בה
 };
 
@@ -206,7 +206,7 @@ function stepUnitType() {
       </button>
       <button class="opt-btn ${state.unitType==='ground'?'selected':''}" onclick="sel('unitType','ground')">
         <span class="opt-icon">🪖</span>
-        <span class="opt-text"><strong>חיל היבשה</strong><span>עמודות: גד' + פלוגה + מחלקה</span></span>
+        <span class="opt-text"><strong>זרוע היבשה</strong><span>עמודות: גד' + פלוגה + מחלקה</span></span>
       </button>
     </div>
     <div class="btn-row">
@@ -397,9 +397,8 @@ function renderResult() {
     </div>
     <div class="alert alert-info" style="font-size:0.82rem">
       💡 <strong>הצעדים הבאים:</strong><br>
-      1. מלא את איכון — יחידות ושיבוץ מנחים<br>
-      2. בגיליונות הקבוצות — הוסף חיילים ידנית (שם / טלפון / יחידה)<br>
-      3. לאחר שיבוץ מנחים — הרץ <strong>fixGroupSheets</strong> ב-Apps Script לעדכון הכותרות
+      1. מלא את לשונית ״איכון״ כולל פרטי מפקדים ושיבוץ מנחים<br>
+      2. שלח למוטי בווטסאפ את רשימות המשתתפים
     </div>
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="setState({step:0,unitType:null,groupStructure:null,unitName:'',dateStart:'',dateEnd:'',groupCount:6,accessToken:null,creating:false,progressStep:-1,resultUrl:null,error:null})">⟳ מסע חדש</button>

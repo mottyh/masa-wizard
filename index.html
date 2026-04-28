@@ -3,23 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>בחזרה לעתיד — אשף מסע v2.1</title>
+<title>בחזרה לעתיד — אשף מסע v2.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-/* ── Reset & Base ─────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8f0;min-height:100vh}
-
-/* ── Layout ──────────────────────────────────────────────────── */
 .app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 80px}
 .header{text-align:center;margin-bottom:36px}
 .header h1{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-0.5px}
 .header p{color:#4a6080;font-size:0.88rem;margin-top:5px}
 .version-tag{display:inline-block;background:#1a3a5c;border:1px solid #2a5a8c;color:#60a5fa;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:6px;letter-spacing:1px}
-.card{background:#111827;border:1px solid #1e2d45;border-radius:18px;padding:32px;width:100%;max-width:560px;box-shadow:0 12px 48px rgba(0,0,0,0.5)}
-
-/* ── Steps bar ───────────────────────────────────────────────── */
+.card{background:#111827;border:1px solid #1e2d45;border-radius:18px;padding:32px;width:100%;max-width:580px;box-shadow:0 12px 48px rgba(0,0,0,0.5)}
 .steps-bar{display:flex;align-items:center;margin-bottom:32px}
 .step-item{display:flex;align-items:center;flex:1}
 .step-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;transition:all 0.3s;border:2px solid #1e2d45;background:#0b1220;color:#4a6080}
@@ -27,12 +22,8 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
 .step-circle.done{border-color:#22c55e;background:#14532d;color:#4ade80}
 .step-line{flex:1;height:2px;background:#1e2d45;margin:0 4px;transition:all 0.3s}
 .step-line.done{background:#22c55e}
-
-/* ── Step content ────────────────────────────────────────────── */
 .step-title{font-size:1.25rem;font-weight:800;color:#fff;margin-bottom:6px}
 .step-sub{color:#4a6080;font-size:0.85rem;margin-bottom:24px;line-height:1.6}
-
-/* ── Options ─────────────────────────────────────────────────── */
 .options{display:flex;flex-direction:column;gap:10px}
 .opt-btn{display:flex;align-items:center;gap:14px;padding:15px 18px;background:#0b1220;border:2px solid #1e2d45;border-radius:12px;cursor:pointer;transition:all 0.2s;text-align:right;color:#e2e8f0;font-family:'Heebo',sans-serif;font-size:0.95rem;width:100%}
 .opt-btn:hover{border-color:#3b82f6;background:#162033}
@@ -41,8 +32,6 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
 .opt-text{text-align:right}
 .opt-text strong{display:block;font-weight:700;font-size:0.95rem}
 .opt-text span{font-size:0.78rem;color:#64748b;margin-top:2px;display:block}
-
-/* ── Form fields ─────────────────────────────────────────────── */
 .field-group{margin-bottom:16px}
 .field-label{font-size:0.82rem;font-weight:600;color:#64748b;margin-bottom:6px;display:block;letter-spacing:0.3px}
 .field-input{width:100%;padding:11px 14px;background:#0b1220;border:1.5px solid #1e2d45;border-radius:10px;color:#e2e8f0;font-family:'Heebo',sans-serif;font-size:0.95rem;outline:none;transition:border 0.2s}
@@ -54,57 +43,34 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
 .group-count-num:focus{border-color:#3b82f6}
 .groups-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .group-chip{padding:4px 10px;background:#0b1220;border:1px solid #1e2d45;border-radius:20px;font-size:0.75rem;color:#64748b}
-
-/* ── Buttons ─────────────────────────────────────────────────── */
 .btn{padding:11px 22px;border-radius:10px;font-family:'Heebo',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:none;display:inline-flex;align-items:center;gap:6px}
 .btn-primary{background:#3b82f6;color:#fff}
 .btn-primary:hover:not(:disabled){background:#2563eb;transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,0.3)}
-.btn-primary:disabled{background:#1e2d45;color:#4a6080;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-primary:disabled{background:#1e2d45;color:#4a6080;cursor:not-allowed}
 .btn-ghost{background:transparent;color:#64748b;border:1.5px solid #1e2d45}
 .btn-ghost:hover{border-color:#64748b;color:#e2e8f0}
-.btn-success{background:#16a34a;color:#fff}
-.btn-success:hover{background:#15803d;transform:translateY(-1px)}
 .btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:24px}
-
-/* ── Alerts ──────────────────────────────────────────────────── */
 .alert{padding:12px 14px;border-radius:10px;font-size:0.84rem;margin-bottom:14px;line-height:1.5}
 .alert-info{background:#1e3a6e;border:1px solid #2563eb;color:#93c5fd}
 .alert-success{background:#14532d;border:1px solid #166534;color:#4ade80}
 .alert-warn{background:#431407;border:1px solid #7c2d12;color:#fb923c}
 .alert-error{background:#3b0a0a;border:1px solid #7f1d1d;color:#fca5a5}
-
-/* ── Config panel ────────────────────────────────────────────── */
-.config-panel{background:#0b1220;border:1px solid #1e2d45;border-radius:12px;padding:16px;margin-bottom:20px}
-.config-panel summary{cursor:pointer;font-size:0.82rem;color:#64748b;font-weight:600;user-select:none;padding:2px 0}
-.config-panel summary:hover{color:#94a3b8}
-.config-inner{margin-top:14px;display:flex;flex-direction:column;gap:10px}
-.config-inner .field-label{color:#4a6080}
-
-/* ── Drive step ──────────────────────────────────────────────── */
 .summary-table{margin-bottom:20px}
 .summary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1a2535;font-size:0.88rem}
 .summary-row:last-child{border-bottom:none}
 .summary-label{color:#4a6080}
 .summary-value{color:#e2e8f0;font-weight:600;max-width:60%;text-align:left;direction:ltr}
-
-.connect-block{text-align:center;padding:24px 0}
-.connect-icon{font-size:3rem;margin-bottom:12px}
-.connect-title{font-size:1rem;font-weight:700;color:#fff;margin-bottom:6px}
-.connect-sub{font-size:0.82rem;color:#4a6080;margin-bottom:20px;line-height:1.5}
-.connect-scopes{display:flex;flex-direction:column;gap:6px;margin:12px 0 20px;text-align:right}
+.connect-scopes{display:flex;flex-direction:column;gap:6px;margin:12px 0 20px}
 .scope-item{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#64748b}
 .scope-dot{width:6px;height:6px;border-radius:50%;background:#3b82f6;flex-shrink:0}
-
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 .progress-steps{display:flex;flex-direction:column;gap:10px;margin:16px 0}
 .prog-step{display:flex;align-items:center;gap:10px;font-size:0.85rem;padding:8px 12px;background:#0b1220;border:1px solid #1e2d45;border-radius:8px;transition:all 0.3s}
 .prog-step.active{border-color:#3b82f6;background:#162033;color:#93c5fd}
 .prog-step.done{border-color:#22c55e;background:#0d2b1a;color:#4ade80}
 .prog-step.waiting{color:#4a6080}
 .prog-icon{width:20px;text-align:center;font-size:1rem;flex-shrink:0}
-
 .result-box{text-align:center;padding:20px 0}
 .result-icon{font-size:3.5rem;margin-bottom:12px;animation:pop 0.5s ease}
 @keyframes pop{0%{transform:scale(0.5);opacity:0}80%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
@@ -119,7 +85,7 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
   <div class="header">
     <h1>🗺️ בחזרה לעתיד</h1>
     <p>אשף יצירת גיליון מסע</p>
-    <span class="version-tag">v2.1</span>
+    <span class="version-tag">v2.2</span>
   </div>
   <div class="card" id="card">
     <div class="steps-bar" id="stepsBar"></div>
@@ -129,11 +95,11 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  CONFIG — הגדר כאן לפני השימוש
+//  CONFIG
 // ══════════════════════════════════════════════════════════════
 const CONFIG = {
   CLIENT_ID: '58131099622-0k834k0setbev2m18pv7vb3enh3bc8tr.apps.googleusercontent.com',
-  FOLDER_ID: '',          // ← (אופציונלי) ID של תיקיית Drive ליצירת הגיליון בה
+  FOLDER_ID: '1kXo2pEPIJkGUTmXEVRZM-LF_0KW1hAQH',
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -142,25 +108,22 @@ const CONFIG = {
 const TOTAL_STEPS = 4;
 let state = {
   step: 0,
-  unitType: null,         // 'naval' | 'ground'
-  groupStructure: null,   // 'single' | 'multi' | 'none'
+  unitType: null,
+  groupStructure: null,
   unitName: '',
   dateStart: '',
   dateEnd: '',
   groupCount: 6,
-  // runtime
   accessToken: null,
   creating: false,
-  progressStep: -1,       // 0=יוצר, 1=מעצב, 2=מסיים
+  progressStep: -1,
   resultUrl: null,
   error: null,
-  // config overrides (can be set via UI)
-  clientId: CONFIG.CLIENT_ID,
-  folderId: CONFIG.FOLDER_ID,
+  scriptWarning: false,
 };
 
 // ══════════════════════════════════════════════════════════════
-//  RENDER
+//  RENDER HELPERS
 // ══════════════════════════════════════════════════════════════
 function setState(patch) { Object.assign(state, patch); render(); }
 function setField(k, v)  { state[k] = v; const b = document.getElementById('continueBtn'); if(b) b.disabled = !state.unitName || !state.dateStart; }
@@ -172,16 +135,13 @@ function updateGroupCount(v) {
   const p = document.getElementById('gcPreview');
   if(p) p.innerHTML = Array.from({length:n},(_,j)=>`<div class="group-chip">קבוצה ${j+1}</div>`).join('');
 }
-
 function render() {
   renderStepsBar();
   const fns = [stepUnitType, stepGroupStructure, stepDetails, stepCreate];
   document.getElementById('stepContent').innerHTML = fns[state.step]();
 }
-
 function renderStepsBar() {
-  const icons = ['⚓','🏗️','📋','✅'];
-  const html = Array.from({length:TOTAL_STEPS}, (_, i) => {
+  const html = Array.from({length:TOTAL_STEPS}, (_,i) => {
     const cls = i < state.step ? 'done' : i === state.step ? 'active' : '';
     const icon = i < state.step ? '✓' : (i+1);
     return `<div class="step-item">
@@ -202,11 +162,11 @@ function stepUnitType() {
     <div class="options">
       <button class="opt-btn ${state.unitType==='naval'?'selected':''}" onclick="sel('unitType','naval')">
         <span class="opt-icon">⚓</span>
-        <span class="opt-text"><strong>חיל הים / חיל האוויר</strong><span>עמודות: יחידה + מסגרת</span></span>
+        <span class="opt-text"><strong>חיל הים / חיל האוויר</strong><span>עמודות: יחידה + מסגרת | מ"פ</span></span>
       </button>
       <button class="opt-btn ${state.unitType==='ground'?'selected':''}" onclick="sel('unitType','ground')">
         <span class="opt-icon">🪖</span>
-        <span class="opt-text"><strong>זרוע היבשה</strong><span>עמודות: גד' + פלוגה + מחלקה</span></span>
+        <span class="opt-text"><strong>זרוע היבשה</strong><span>עמודות: גד' + פלוגה + מחלקה | מ"פ + מ"מ</span></span>
       </button>
     </div>
     <div class="btn-row">
@@ -290,29 +250,26 @@ function stepDetails() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  STEP 4: Create sheet
+//  STEP 4: Create
 // ══════════════════════════════════════════════════════════════
 function stepCreate() {
-  if (state.resultUrl)   return renderResult();
-  if (state.creating)    return renderCreating();
+  if (state.resultUrl)  return renderResult();
+  if (state.creating)   return renderCreating();
   return renderConnectScreen();
 }
 
 function renderConnectScreen() {
   const isNaval = state.unitType === 'naval';
   const label = buildLabel();
-  const noClientId = !state.clientId;
-
   return `
     <div class="step-title">יצירת הגיליון</div>
-    <div class="step-sub">סיכום ואישור — לאחר מכן הגיליון יווצר ישירות ב-Drive שלך</div>
-
+    <div class="step-sub">סיכום ואישור — הגיליון יווצר ב-Drive של מוטי</div>
     <div class="summary-table">
       ${[
         ['יחידה', state.unitName],
         ['תאריכים', state.dateStart + (state.dateEnd?' — '+state.dateEnd:'')],
         ['מספר קבוצות', state.groupCount],
-        ['מבנה איכון', isNaval ? 'יחידה + מסגרת' : "גד' + פלוגה + מחלקה"],
+        ['מבנה', isNaval ? 'יחידה + מסגרת | מ"פ' : "גד' + פלוגה + מחלקה | מ\"פ + מ\"מ"],
         ['שם הגיליון', label],
       ].map(([l,v])=>`
         <div class="summary-row">
@@ -320,46 +277,14 @@ function renderConnectScreen() {
           <span class="summary-value">${v}</span>
         </div>`).join('')}
     </div>
-
-    ${noClientId ? `
-    <div class="alert alert-warn">
-      ⚠️ לא הוגדר Client ID — ראה הוראות הגדרה למטה
-    </div>` : ''}
-
-    <details class="config-panel">
-      <summary>⚙️ הגדרות Google (Client ID & תיקייה)</summary>
-      <div class="config-inner">
-        <div>
-          <label class="field-label">Google Client ID</label>
-          <input class="field-input" type="text" placeholder="XXXXXXXXXX.apps.googleusercontent.com"
-            value="${state.clientId}"
-            onkeyup="state.clientId=this.value; document.getElementById('createBtn').disabled=!this.value.trim()"
-            onblur="state.clientId=this.value; document.getElementById('createBtn').disabled=!this.value.trim()">
-        </div>
-        <div>
-          <label class="field-label">תיקיית Drive (אופציונלי — ID בלבד)</label>
-          <input class="field-input" type="text" placeholder="1mPewrQth2OsVLaPNqlXU3Ak5gk0iy19A"
-            value="${state.folderId}"
-            onkeyup="state.folderId=this.value"
-            onblur="state.folderId=this.value">
-        </div>
-        <div class="alert alert-info" style="font-size:0.8rem;margin-bottom:0">
-          📋 <strong>איך מקבלים Client ID?</strong><br>
-          console.cloud.google.com → New Project → APIs → Sheets API + Drive API → Credentials → OAuth Client ID → Web Application → Authorized JS Origins: הכנס את כתובת הדומיין שלך
-        </div>
-      </div>
-    </details>
-
     <div class="connect-scopes">
       <div class="scope-item"><span class="scope-dot"></span>יצירת Spreadsheet ב-Google Sheets</div>
-      <div class="scope-item"><span class="scope-dot"></span>הוספה לתיקיית Drive ${state.folderId ? '(התיקייה שהגדרת)' : '(My Drive)'}</div>
+      <div class="scope-item"><span class="scope-dot"></span>שמירה בתיקיית Drive של מוטי</div>
+      <div class="scope-item"><span class="scope-dot"></span>יצירת תפריט ייצוא אנשי קשר</div>
     </div>
-
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="prevStep()">← חזור</button>
-      <button class="btn btn-primary" id="createBtn" ${!state.clientId?'disabled':''} onclick="startOAuth()">
-        🔗 התחבר ל-Google וצור גיליון
-      </button>
+      <button class="btn btn-primary" onclick="startOAuth()">🔗 התחבר ל-Google וצור גיליון</button>
     </div>`;
 }
 
@@ -367,7 +292,8 @@ function renderCreating() {
   const steps = [
     { label: 'יוצר את הגיליון ב-Drive', icon: '📄' },
     { label: 'מגדיר לשוניות ועיצוב', icon: '🎨' },
-    { label: 'מסיים ומוסיף לתיקייה',  icon: '📁' },
+    { label: 'מוסיף תפריט ייצוא', icon: '📤' },
+    { label: 'מסיים', icon: '✅' },
   ];
   return `
     <div class="step-title">יוצר את הגיליון...</div>
@@ -376,10 +302,7 @@ function renderCreating() {
       ${steps.map((s,i) => {
         const cls = i < state.progressStep ? 'done' : i === state.progressStep ? 'active' : 'waiting';
         const icon = i < state.progressStep ? '✅' : i === state.progressStep ? '<span class="spinner"></span>' : s.icon;
-        return `<div class="prog-step ${cls}">
-          <span class="prog-icon">${icon}</span>
-          <span>${s.label}</span>
-        </div>`;
+        return `<div class="prog-step ${cls}"><span class="prog-icon">${icon}</span><span>${s.label}</span></div>`;
       }).join('')}
     </div>
     ${state.error ? `<div class="alert alert-error">❌ ${state.error}</div>
@@ -395,28 +318,30 @@ function renderResult() {
       <br>
       <a class="sheet-link" href="${state.resultUrl}" target="_blank">📊 פתח את הגיליון</a>
     </div>
+    ${state.scriptWarning ? `<div class="alert alert-warn" style="font-size:0.8rem">⚠️ תפריט הייצוא לא נוצר אוטומטית — הרץ את הסקריפט ידנית מ-Extensions → Apps Script</div>` : ''}
     <div class="alert alert-info" style="font-size:0.82rem">
       💡 <strong>הצעדים הבאים:</strong><br>
       1. מלא את לשונית ״איכון״ כולל פרטי מפקדים ושיבוץ מנחים<br>
       2. שלח למוטי בווטסאפ את רשימות המשתתפים
     </div>
     <div class="btn-row">
-      <button class="btn btn-ghost" onclick="setState({step:0,unitType:null,groupStructure:null,unitName:'',dateStart:'',dateEnd:'',groupCount:6,accessToken:null,creating:false,progressStep:-1,resultUrl:null,error:null})">⟳ מסע חדש</button>
+      <button class="btn btn-ghost" onclick="setState({step:0,unitType:null,groupStructure:null,unitName:'',dateStart:'',dateEnd:'',groupCount:6,accessToken:null,creating:false,progressStep:-1,resultUrl:null,error:null,scriptWarning:false})">⟳ מסע חדש</button>
     </div>`;
 }
 
 // ══════════════════════════════════════════════════════════════
-//  OAUTH + SHEETS API
+//  OAUTH
 // ══════════════════════════════════════════════════════════════
 let tokenClient = null;
 
 function startOAuth() {
-  const clientId = state.clientId.trim();
-  if (!clientId) return;
-
   tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+    client_id: CONFIG.CLIENT_ID,
+    scope: [
+      'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive.file',
+      'https://www.googleapis.com/auth/script.projects',
+    ].join(' '),
     callback: async (resp) => {
       if (resp.error) { setState({creating:false, error:'שגיאת OAuth: ' + resp.error}); return; }
       setState({ accessToken: resp.access_token, creating: true, progressStep: 0, error: null });
@@ -427,28 +352,33 @@ function startOAuth() {
   setState({ creating: true, progressStep: 0, error: null });
 }
 
+// ══════════════════════════════════════════════════════════════
+//  SHEET CREATION
+// ══════════════════════════════════════════════════════════════
 async function doCreateSheet(token) {
   try {
-    const isNaval    = state.unitType === 'naval';
-    const n          = state.groupCount;
-    const label      = buildLabel();
+    const isNaval = state.unitType === 'naval';
+    const hasMAM  = state.unitType === 'ground' && state.groupStructure !== 'none';
+    const n       = state.groupCount;
+    const label   = buildLabel();
 
-    // ── 1. Build icHeaders ──────────────────────────────────
+    // ── Column definitions ──────────────────────────────────
     const icHeaders = isNaval
-      ? ['קבוצה','יחידה','מסגרת','כמות','אישרו','קבוצת ווטסאפ','מנחה 1','מנחה 2',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'","מסלול יום ג'","יום ד'","יום ה'"]
-      : ['קבוצה',"גד'",'פלוגה','מחלקה','כמות','אישרו','קבוצת ווטסאפ','מנחה 1','מנחה 2',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'","מסלול יום ג'","יום ד'","יום ה'"];
+      ? ['קבוצה','יחידה','מסגרת','כמות','אישרו','קבוצת ווטסאפ','מנחה 1','מנחה 2','שם מ"פ','טלפון מ"פ',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'",'מסלול יום ג\'',"יום ד'",'יום ה\'']
+      : ['קבוצה',"גד'",'פלוגה','מחלקה','כמות','אישרו','קבוצת ווטסאפ','מנחה 1','מנחה 2','שם מ"פ','טלפון מ"פ','שם מ"מ','טלפון מ"מ',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'",'מסלול יום ג\'',"יום ד'",'יום ה\''];
 
-    const solHdr     = ['שם משפחה','שם פרטי','טלפון', isNaval ? 'יחידת רישום' : 'יחידה', 'רגישות מזון'];
-    const pkHdr      = ['קבוצה','שם פרטי','שם משפחה','טלפון','מנחה'];
-    const exHdr      = ['שם ל-Contact','טלפון','תפקיד','label'];
-    const NUM_SOL    = solHdr.length;
+    const solHdr  = ['שם משפחה','שם פרטי','טלפון', isNaval ? 'יחידת רישום' : 'יחידה', 'רגישות מזון'];
+    const pkHdr   = ['קבוצה','שם פרטי','שם משפחה','טלפון','מנחה'];
+    const NUM_SOL = solHdr.length;
+    // Group sheet rows: 0=title(merged), 1=מ"פ, 2=מ"מ(ground), 3or2=headers, 4or3+=soldiers
+    const HDR_ROW = hasMAM ? 3 : 2; // row index of column headers
 
-    // ── 2. Create spreadsheet ───────────────────────────────
+    // ── 1. Create spreadsheet ────────────────────────────────
+    // Tab order: איכון (0), קבוצה 1..N (1..N), פקל שמות (N+1)
     const sheetDefs = [
-      { properties: { title: 'איכון',      index: 0 } },
-      { properties: { title: 'פקל שמות',   index: 1 } },
-      ...Array.from({length:n}, (_,i) => ({ properties: { title: `קבוצה ${i+1}`, index: i+2 } })),
-      { properties: { title: 'EXPORT',      index: n+2 } },
+      { properties: { title: 'איכון',    index: 0 } },
+      ...Array.from({length:n}, (_,i) => ({ properties: { title: `קבוצה ${i+1}`, index: i+1 } })),
+      { properties: { title: 'פקל שמות', index: n+1 } },
     ];
 
     const createRes = await sheetsReq('', 'POST', {
@@ -458,92 +388,253 @@ async function doCreateSheet(token) {
 
     if (createRes.error) throw new Error(createRes.error.message || JSON.stringify(createRes.error));
 
-    const spreadsheetId = createRes.spreadsheetId;
+    const sid = createRes.spreadsheetId;
     const sheetMap = {};
     createRes.sheets.forEach(s => { sheetMap[s.properties.title] = s.properties.sheetId; });
 
     setState({ progressStep: 1 });
 
-    // ── 3. Build batchUpdate requests ───────────────────────
-    const requests = [];
+    // ── 2. batchUpdate ───────────────────────────────────────
+    const reqs = [];
 
     // RTL all sheets
-    Object.values(sheetMap).forEach(sid => {
-      requests.push({ updateSheetProperties: { properties: { sheetId: sid, rightToLeft: true }, fields: 'rightToLeft' } });
+    Object.values(sheetMap).forEach(id => {
+      reqs.push({ updateSheetProperties: { properties: { sheetId: id, rightToLeft: true }, fields: 'rightToLeft' } });
     });
 
-    // Freeze איכון row 1
-    requests.push({ updateSheetProperties: { properties: { sheetId: sheetMap['איכון'], gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } });
+    // ── איכון ──────────────────────────────────────────────
+    const icId = sheetMap['איכון'];
 
-    // איכון header row
-    requests.push(makeCellsReq(sheetMap['איכון'], 0, icHeaders, '#1a3a5c'));
+    // Freeze 2 rows (title + headers)
+    reqs.push({ updateSheetProperties: { properties: { sheetId: icId, gridProperties: { frozenRowCount: 2 } }, fields: 'gridProperties.frozenRowCount' } });
 
-    // איכון data rows (group rows)
-    const groupRows = Array.from({length:n}, (_,i) => {
-      const row = [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')];
-      return { values: row.map(v => ({ userEnteredValue: { stringValue: v } })) };
-    });
-    requests.push({
+    // Row 0: merged title
+    reqs.push({ mergeCells: { range: { sheetId: icId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: icHeaders.length }, mergeType: 'MERGE_ALL' } });
+    reqs.push({
       updateCells: {
-        range: { sheetId: sheetMap['איכון'], startRowIndex: 1, endRowIndex: 1+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
-        rows: groupRows,
+        range: { sheetId: icId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [{ values: [{ userEnteredValue: { stringValue: label }, userEnteredFormat: { backgroundColor: hexToRgb('#0d2540'), textFormat: { foregroundColor: {red:1,green:1,blue:1}, bold:true, fontSize:13 }, horizontalAlignment: 'CENTER', verticalAlignment: 'MIDDLE' } }] }],
+        fields: 'userEnteredValue,userEnteredFormat',
+      }
+    });
+
+    // Row 1: column headers
+    reqs.push(makeCellsReq(icId, 1, icHeaders, '#1a3a5c'));
+
+    // Rows 2+: group rows
+    reqs.push({
+      updateCells: {
+        range: { sheetId: icId, startRowIndex: 2, endRowIndex: 2+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
+        rows: Array.from({length:n}, (_,i) => ({
+          values: [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v } }))
+        })),
         fields: 'userEnteredValue',
       }
     });
 
-    // Group sheets
+    // ── Group sheets ────────────────────────────────────────
     for (let g = 1; g <= n; g++) {
-      const sid = sheetMap[`קבוצה ${g}`];
+      const gid = sheetMap[`קבוצה ${g}`];
 
-      // Merge row 1
-      requests.push({ mergeCells: { range: { sheetId: sid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
+      // Freeze HDR_ROW+1 rows
+      reqs.push({ updateSheetProperties: { properties: { sheetId: gid, gridProperties: { frozenRowCount: HDR_ROW + 1 } }, fields: 'gridProperties.frozenRowCount' } });
 
-      // Row 1: merged title
-      requests.push({
+      // Row 0: merged title
+      reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
+      reqs.push({
         updateCells: {
-          range: { sheetId: sid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 },
-          rows: [{ values: [{ userEnteredValue: { stringValue: `קבוצה ${g}` }, userEnteredFormat: { backgroundColor: hexToRgb('#1a3a5c'), textFormat: { foregroundColor: {red:1,green:1,blue:1}, bold:true, fontSize:11 }, horizontalAlignment: 'RIGHT', verticalAlignment: 'MIDDLE' } }] }],
+          range: { sheetId: gid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1 },
+          rows: [{ values: [{ userEnteredValue: { stringValue: `קבוצה ${g}` }, userEnteredFormat: { backgroundColor: hexToRgb('#1a3a5c'), textFormat: { foregroundColor: {red:1,green:1,blue:1}, bold:true, fontSize:12 }, horizontalAlignment: 'RIGHT', verticalAlignment: 'MIDDLE' } }] }],
           fields: 'userEnteredValue,userEnteredFormat',
         }
       });
 
-      // Row 2: column headers
-      requests.push(makeCellsReq(sid, 1, solHdr, '#0d3349', NUM_SOL));
+      // Row 1: מ"פ row — label | שם | טלפון | (merged rest)
+      reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 3, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
+      reqs.push({
+        updateCells: {
+          range: { sheetId: gid, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: NUM_SOL },
+          rows: [{ values: [
+            { userEnteredValue: { stringValue: 'מ"פ' },  userEnteredFormat: { backgroundColor: hexToRgb('#0d3349'), textFormat: { foregroundColor: {red:1,green:1,blue:1}, bold:true }, horizontalAlignment: 'RIGHT' } },
+            { userEnteredValue: { stringValue: '' },     userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+            { userEnteredValue: { stringValue: '' },     userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+            { userEnteredValue: { stringValue: '' },     userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+            { userEnteredValue: { stringValue: '' },     userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+          ] }],
+          fields: 'userEnteredValue,userEnteredFormat',
+        }
+      });
 
-      // Freeze 2 rows
-      requests.push({ updateSheetProperties: { properties: { sheetId: sid, gridProperties: { frozenRowCount: 2 } }, fields: 'gridProperties.frozenRowCount' } });
+      // Row 2: מ"מ row (ground only)
+      if (hasMAM) {
+        reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 2, endRowIndex: 3, startColumnIndex: 3, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
+        reqs.push({
+          updateCells: {
+            range: { sheetId: gid, startRowIndex: 2, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: NUM_SOL },
+            rows: [{ values: [
+              { userEnteredValue: { stringValue: 'מ"מ' }, userEnteredFormat: { backgroundColor: hexToRgb('#0d3349'), textFormat: { foregroundColor: {red:1,green:1,blue:1}, bold:true }, horizontalAlignment: 'RIGHT' } },
+              { userEnteredValue: { stringValue: '' },    userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+              { userEnteredValue: { stringValue: '' },    userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+              { userEnteredValue: { stringValue: '' },    userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+              { userEnteredValue: { stringValue: '' },    userEnteredFormat: { backgroundColor: hexToRgb('#142a3a') } },
+            ] }],
+            fields: 'userEnteredValue,userEnteredFormat',
+          }
+        });
+      }
+
+      // Column headers row
+      reqs.push(makeCellsReq(gid, HDR_ROW, solHdr, '#0d3349', NUM_SOL));
     }
 
-    // פקל שמות header
-    requests.push(makeCellsReq(sheetMap['פקל שמות'], 0, pkHdr, '#2d4a1e', pkHdr.length));
-    requests.push({ updateSheetProperties: { properties: { sheetId: sheetMap['פקל שמות'], gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } });
+    // ── פקל שמות ────────────────────────────────────────────
+    const pkId = sheetMap['פקל שמות'];
+    reqs.push({ updateSheetProperties: { properties: { sheetId: pkId, gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } });
+    reqs.push(makeCellsReq(pkId, 0, pkHdr, '#2d4a1e', pkHdr.length));
 
-    // EXPORT header
-    requests.push(makeCellsReq(sheetMap['EXPORT'], 0, exHdr, '#3a1a1a', exHdr.length));
-    requests.push({ updateSheetProperties: { properties: { sheetId: sheetMap['EXPORT'], gridProperties: { frozenRowCount: 1 } }, fields: 'gridProperties.frozenRowCount' } });
-
-    // ── 4. Execute batchUpdate ──────────────────────────────
-    const batchRes = await sheetsReq(`/${spreadsheetId}:batchUpdate`, 'POST', { requests }, token);
+    // ── Execute batchUpdate ──────────────────────────────────
+    const batchRes = await sheetsReq(`/${sid}:batchUpdate`, 'POST', { requests: reqs }, token);
     if (batchRes.error) throw new Error(batchRes.error.message || JSON.stringify(batchRes.error));
 
     setState({ progressStep: 2 });
 
-    // ── 5. Move to folder (if configured) ──────────────────
-    if (state.folderId) {
-      // Get current parents
-      const meta = await driveReq(`/files/${spreadsheetId}?fields=parents`, 'GET', null, token);
-      const oldParents = (meta.parents || []).join(',');
-      await driveReq(
-        `/files/${spreadsheetId}?addParents=${state.folderId}&removeParents=${oldParents}&fields=id,parents`,
-        'PATCH', {}, token
-      );
-    }
+    // ── 3. Move to folder ────────────────────────────────────
+    const meta = await driveReq(`/files/${sid}?fields=parents`, 'GET', null, token);
+    const oldParents = (meta.parents || []).join(',');
+    await driveReq(`/files/${sid}?addParents=${CONFIG.FOLDER_ID}&removeParents=${oldParents}&fields=id`, 'PATCH', {}, token);
 
-    setState({ creating: false, resultUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}` });
+    // ── 4. Apps Script (VCF export menu) ────────────────────
+    setState({ progressStep: 3 });
+    await createAppsScript(sid, label, hasMAM, HDR_ROW, token);
+
+    setState({ creating: false, resultUrl: `https://docs.google.com/spreadsheets/d/${sid}` });
 
   } catch(e) {
     setState({ creating: false, error: e.message || 'שגיאה לא ידועה' });
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  APPS SCRIPT CREATION
+// ══════════════════════════════════════════════════════════════
+async function createAppsScript(spreadsheetId, label, hasMAM, hdrRow, token) {
+  try {
+    // Create bound script project
+    const projRes = await fetch('https://script.googleapis.com/v1/projects', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'ייצוא אנשי קשר', parentId: spreadsheetId }),
+    });
+    const proj = await projRes.json();
+    if (!proj.scriptId) throw new Error('no scriptId');
+
+    // Build script source
+    const scriptSource = buildScriptSource(label, hasMAM, hdrRow);
+
+    // Update content
+    const contentRes = await fetch(`https://script.googleapis.com/v1/projects/${proj.scriptId}/content`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        files: [
+          { name: 'Code', type: 'SERVER_JS', source: scriptSource },
+          { name: 'appsscript', type: 'JSON', source: JSON.stringify({ timeZone: 'Asia/Jerusalem', dependencies: {}, exceptionLogging: 'STACKDRIVER', runtimeVersion: 'V8' }) },
+        ]
+      }),
+    });
+    const content = await contentRes.json();
+    if (content.error) throw new Error(content.error.message);
+
+  } catch(e) {
+    // Non-fatal — sheet still works, just no auto-menu
+    console.warn('Apps Script creation failed:', e.message);
+    state.scriptWarning = true;
+  }
+}
+
+function buildScriptSource(label, hasMAM, hdrRow) {
+  return `
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('📤 ייצוא')
+    .addItem('הורד VCF — כל הקבוצות', 'exportAllVCF')
+    .addSeparator()
+    .addItem('הורד VCF — קבוצה פעילה', 'exportActiveVCF')
+    .toUi();
+}
+
+var MASA_LABEL = ${JSON.stringify(label)};
+var HDR_ROW    = ${hdrRow};     // 0-based row index of column headers
+var HAS_MAM    = ${hasMAM};
+
+function exportAllVCF() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var vcf = '';
+  ss.getSheets().forEach(function(sh) {
+    if (sh.getName().indexOf('קבוצה') === 0) vcf += sheetToVCF(sh);
+  });
+  downloadVCF(vcf, 'כל_הקבוצות.vcf');
+}
+
+function exportActiveVCF() {
+  var sh = SpreadsheetApp.getActiveSheet();
+  if (sh.getName().indexOf('קבוצה') !== 0) {
+    SpreadsheetApp.getUi().alert('אנא עבור ללשונית קבוצה כלשהי לפני הייצוא.');
+    return;
+  }
+  downloadVCF(sheetToVCF(sh), sh.getName() + '.vcf');
+}
+
+function sheetToVCF(sh) {
+  var data = sh.getDataRange().getValues();
+  var groupName = sh.getName();
+  var vcf = '';
+
+  // מ"פ — row 1 (index 1): [label, name, phone, ...]
+  var mafRow = data[1] || [];
+  if (mafRow[1]) vcf += buildContact(mafRow[1], mafRow[2] || '', 'מ"פ ' + groupName, MASA_LABEL);
+
+  // מ"מ — row 2 (index 2), ground only
+  if (HAS_MAM) {
+    var mamRow = data[2] || [];
+    if (mamRow[1]) vcf += buildContact(mamRow[1], mamRow[2] || '', 'מ"מ ' + groupName, MASA_LABEL);
+  }
+
+  // Soldiers — from HDR_ROW+1 onwards
+  for (var r = HDR_ROW + 1; r < data.length; r++) {
+    var row = data[r];
+    var lastName  = row[0] || '';
+    var firstName = row[1] || '';
+    if (!lastName && !firstName) continue;
+    var phone = row[2] || '';
+    vcf += buildContact(lastName + ' ' + firstName, phone, '', MASA_LABEL);
+  }
+  return vcf;
+}
+
+function buildContact(fullName, phone, role, label) {
+  var parts     = fullName.trim().split(/\\s+/);
+  var lastName  = parts[0] || '';
+  var firstName = parts.slice(1).join(' ');
+  var displayName = lastName + (role ? ' | ' + role : '') + ' | ' + label;
+  var v = 'BEGIN:VCARD\\nVERSION:3.0\\n';
+  v += 'N:' + lastName + ';' + firstName + ';;;\\n';
+  v += 'FN:' + displayName + '\\n';
+  if (phone) v += 'TEL;TYPE=CELL:' + phone + '\\n';
+  v += 'END:VCARD\\n';
+  return v;
+}
+
+function downloadVCF(content, filename) {
+  var blob    = Utilities.newBlob(content, 'text/vcard', filename);
+  var encoded = Utilities.base64Encode(blob.getBytes());
+  var html    = HtmlService.createHtmlOutput(
+    '<script>var a=document.createElement("a");a.href="data:text/vcard;base64,' + encoded +
+    '";a.download=' + JSON.stringify(filename) + ';document.body.appendChild(a);a.click();<\\/script>'
+  ).setWidth(10).setHeight(10);
+  SpreadsheetApp.getUi().showModalDialog(html, 'מוריד...');
+}
+`;
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -586,14 +677,15 @@ function makeCellsReq(sheetId, rowIndex, headers, bgHex, numCols) {
 }
 
 function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16)/255;
-  const g = parseInt(hex.slice(3,5),16)/255;
-  const b = parseInt(hex.slice(5,7),16)/255;
-  return {red:r,green:g,blue:b};
+  return {
+    red:   parseInt(hex.slice(1,3),16)/255,
+    green: parseInt(hex.slice(3,5),16)/255,
+    blue:  parseInt(hex.slice(5,7),16)/255,
+  };
 }
 
 // ══════════════════════════════════════════════════════════════
-//  NAVIGATION
+//  NAVIGATION & UTILS
 // ══════════════════════════════════════════════════════════════
 function sel(k,v)  { setState({[k]:v}); }
 function nextStep(){ if(state.step<TOTAL_STEPS-1) setState({step:state.step+1}); }

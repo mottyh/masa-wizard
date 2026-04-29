@@ -442,9 +442,9 @@ async function doCreateSheet(token) {
       updateCells: {
         range: { sheetId: icId, startRowIndex: 2, endRowIndex: 2+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
         rows: Array.from({length:n}, (_,i) => ({
-          values: [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v } }))
+          values: [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v }, userEnteredFormat: { horizontalAlignment: 'RIGHT' } }))
         })),
-        fields: 'userEnteredValue',
+        fields: 'userEnteredValue,userEnteredFormat',
       }
     });
 
@@ -552,7 +552,8 @@ function buildLabel() {
     const parts = state.dateStart.split('/');
     if (parts.length >= 2) dateLabel = parts[1].padStart(2,'0') + '.' + (parts[2]||'').slice(-2);
   }
-  return `בחזרה לעתיד ${state.unitName} ${dateLabel}`.trim();
+  const sep = (state.unitName && dateLabel) ? ' | ' : ' ';
+  return `בחזרה לעתיד | ${state.unitName}${sep}${dateLabel}`.trim();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -564,6 +565,10 @@ function buildExportScript(label) {
     .createMenu('📤 ייצוא')
     .addItem('הורד VCF — כל הקבוצות', 'exportAllVCF')
     .addItem('הורד VCF — קבוצה פעילה', 'exportActiveVCF')
+    .addSeparator()
+    .addItem('ייצא ל-Google Contacts', 'exportToContacts')
+    .addSeparator()
+    .addItem('התאם רוחב עמודות', 'autoResizeAll')
     .addToUi();
 }
 
@@ -595,20 +600,53 @@ function sheetToVCF(sh) {
     var last = row[0] || '', first = row[1] || '';
     if (!last && !first) continue;
     var phone = String(row[2] || '');
-    var fn = last + ' | ' + MASA_LABEL;
     vcf += 'BEGIN:VCARD\\nVERSION:3.0\\n';
     vcf += 'N:' + last + ';' + first + ';;;\\n';
-    vcf += 'FN:' + fn + '\\n';
+    vcf += 'FN:' + last + ' | ' + MASA_LABEL + '\\n';
     if (phone) vcf += 'TEL;TYPE=CELL:' + phone + '\\n';
     vcf += 'END:VCARD\\n';
   }
   return vcf;
 }
 
+function exportToContacts() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var created = 0, skipped = 0;
+  ss.getSheets().forEach(function(sh) {
+    if (sh.getName().indexOf('קבוצה') !== 0) return;
+    var data = sh.getDataRange().getValues();
+    for (var r = 2; r < data.length; r++) {
+      var row = data[r];
+      var last = String(row[0] || '').trim();
+      var first = String(row[1] || '').trim();
+      if (!last && !first) continue;
+      var phone = String(row[2] || '').trim();
+      try {
+        var contact = {
+          names: [{ familyName: last, givenName: first, displayName: last + ' | ' + MASA_LABEL }],
+        };
+        if (phone) {
+          contact.phoneNumbers = [{ value: phone, type: 'mobile' }];
+        }
+        People.People.createContact(contact);
+        created++;
+      } catch(e) {
+        skipped++;
+      }
+    }
+  });
+  SpreadsheetApp.getUi().alert('✅ נוצרו ' + created + ' אנשי קשר' + (skipped ? ' | דולגו: ' + skipped : ''));
+}
+
+function autoResizeAll() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.getSheets().forEach(function(sh) {
+    sh.autoResizeColumns(1, sh.getLastColumn());
+  });
+}
+
 function downloadVCF(content, filename) {
-  var file = DriveApp.getRootFolder().createFile(
-    filename, content, 'text/vcard'
-  );
+  var file = DriveApp.getRootFolder().createFile(filename, content, 'text/vcard');
   var html = HtmlService.createHtmlOutput(
     '<p style="font-family:Arial;padding:10px">הקובץ מוכן! ' +
     '<a href="' + file.getDownloadUrl() + '" target="_blank">לחץ להורדה</a></p>'

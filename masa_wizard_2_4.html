@@ -442,9 +442,16 @@ async function doCreateSheet(token) {
       updateCells: {
         range: { sheetId: icId, startRowIndex: 2, endRowIndex: 2+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
         rows: Array.from({length:n}, (_,i) => ({
-          values: [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v }, userEnteredFormat: { horizontalAlignment: 'RIGHT' } }))
+          values: [`קבוצה ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v } }))
         })),
-        fields: 'userEnteredValue,userEnteredFormat',
+        fields: 'userEnteredValue',
+      }
+    });
+    reqs.push({
+      repeatCell: {
+        range: { sheetId: icId, startRowIndex: 2, endRowIndex: 2+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
+        cell: { userEnteredFormat: { horizontalAlignment: 'RIGHT' } },
+        fields: 'userEnteredFormat.horizontalAlignment',
       }
     });
 

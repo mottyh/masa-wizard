@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחולל לו"ז מסע בחזרה לעתיד</title>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B3A6B;--navy-mid:#2A5298;--navy-light:#EEF2FF;
+  --gold:#C8960C;--gold-light:#FFF8E6;
+  --green:#2D8A4E;--bg:#F4F6FA;--white:#fff;
+  --border:#CBD5E0;--text:#1A202C;--muted:#718096;
+  --row-alt:#F7F9FF;
+  --hfont: Tahoma, Arial, sans-serif;
+}
+body{font-family:'Assistant',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;direction:rtl}
+
+/* WIZARD */
+#wizard{max-width:680px;margin:0 auto;padding:32px 16px 64px}
+
+.wiz-brand{display:flex;flex-direction:column;align-items:center;margin-bottom:28px}
+.brand-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.logo-ring{width:52px;height:52px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* להחלפה בלוגו מומנטום האמיתי: שנה את תוכן .logo-ring ו-.doc-logo-ring */
+.brand-name{font-family:var(--hfont);font-size:20px;font-weight:700;color:var(--navy);letter-spacing:2px}
+.wiz-title{font-family:var(--hfont);font-size:24px;color:var(--navy);font-weight:700}
+.wiz-sub{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* Progress */
+.progress{display:flex;align-items:center;margin-bottom:28px}
+.pdot{display:flex;flex-direction:column;align-items:center;gap:5px}
+.pdot .circle{width:34px;height:34px;border-radius:50%;background:#CBD5E0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;transition:all .3s;z-index:1}
+.pdot .plabel{font-size:11px;color:var(--muted);white-space:nowrap;text-align:center}
+.pdot.active .circle{background:var(--navy)}
+.pdot.active .plabel{color:var(--navy);font-weight:700}
+.pdot.done .circle{background:var(--green)}
+.pline{flex:1;height:2px;background:#CBD5E0;margin:0 6px 20px;max-width:100px}
+.pline.done{background:var(--green)}
+
+/* Card */
+.card{background:var(--white);border-radius:16px;padding:28px 32px;box-shadow:0 2px 16px rgba(0,0,0,0.08);display:none}
+.card.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card-title{font-family:var(--hfont);font-size:20px;color:var(--navy);font-weight:700;margin-bottom:22px;padding-bottom:12px;border-bottom:2px solid var(--gold)}
+
+/* Fields */
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:'Assistant',sans-serif;color:var(--text);transition:border-color .2s;direction:rtl;background:white}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--navy);background:var(--navy-light)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.frow4{display:grid;grid-template-columns:110px 1fr 90px 90px;gap:12px}
+
+/* Lecture block */
+.lec-block{background:var(--gold-light);border-radius:10px;padding:16px 18px;margin-bottom:14px;border-right:4px solid var(--gold)}
+.lec-block-title{font-weight:700;color:#7A5800;margin-bottom:12px;font-size:14px;display:flex;align-items:center;gap:6px}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;margin-top:24px}
+.btn{padding:11px 26px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:'Assistant',sans-serif}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy-mid)}
+.btn-secondary{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+.btn-secondary:hover{background:var(--navy-light)}
+.btn-gen{background:linear-gradient(135deg,var(--navy),var(--navy-mid));color:#fff;width:100%;padding:15px;font-size:17px;border-radius:10px;margin-top:8px;letter-spacing:.5px;box-shadow:0 4px 14px rgba(27,58,107,.35)}
+.btn-gen:hover{opacity:.92}
+
+/* SCHEDULE */
+#schedule{display:none}
+.sch-controls{background:var(--navy);padding:10px 20px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:100}
+.sch-controls .btn-back{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);padding:9px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Assistant',sans-serif}
+.sch-controls .btn-back:hover{background:rgba(255,255,255,.15)}
+.sch-controls .btn-print{background:var(--gold);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Assistant',sans-serif}
+.sch-controls .btn-print:hover{opacity:.9}
+.edit-hint{color:rgba(255,255,255,.7);font-size:13px;margin-right:auto}
+
+.sch-wrapper{padding:24px;max-width:1280px;margin:0 auto}
+.sch-doc{background:white;padding:28px 36px 36px;box-shadow:0 4px 28px rgba(0,0,0,.12);border-radius:3px}
+
+.doc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid var(--navy)}
+.doc-title h1{font-family:var(--hfont);font-size:20px;font-weight:700;color:var(--navy);line-height:1.3}
+.doc-title h2{font-family:var(--hfont);font-size:14px;color:var(--muted);font-weight:400;margin-top:4px}
+.doc-logo-area{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.doc-logo-ring{width:44px;height:44px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center}
+.doc-logo-name{font-family:var(--hfont);font-size:15px;font-weight:700;color:var(--navy);letter-spacing:2px}
+
+/* Table */
+.sch-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.sch-table th{background:var(--navy);color:#fff;padding:9px 7px;text-align:center;font-family:var(--hfont);font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.15)}
+.sch-table th.th-time{width:88px}
+.sch-table td{border:1px solid #D1D9E6;vertical-align:top;padding:0}
+.sch-table tr:nth-child(even) td.day-cell{background:var(--row-alt)}
+.sch-table td.time-cell{background:var(--navy) !important;color:#fff;text-align:center;font-weight:700;font-size:11.5px;padding:7px 4px;white-space:nowrap;vertical-align:middle}
+.cell-inner{min-height:44px;padding:7px 9px;outline:none;white-space:pre-wrap;line-height:1.55;cursor:text;direction:rtl;font-family:'Assistant',sans-serif;font-size:13px}
+.cell-inner:focus{background:#EEF4FF;outline:1px solid var(--navy-mid)}
+.cell-inner:empty::before{content:'\00a0'}
+.day-cell[rowspan]{vertical-align:middle}
+
+.doc-footer{margin-top:14px;text-align:center;font-style:italic;color:var(--muted);font-size:12.5px;font-family:var(--hfont)}
+
+/* Context menu */
+#ctxMenu{position:fixed;background:white;border:1px solid #CBD5E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;min-width:150px;overflow:hidden;font-family:'Assistant',sans-serif;font-size:14px;direction:rtl}
+.ctx-item{padding:11px 18px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ctx-item:hover{background:var(--navy-light)}
+
+/* Print */
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  body{background:white}
+  #wizard{display:none!important}
+  #schedule{display:block!important}
+  .sch-controls{display:none!important}
+  #ctxMenu{display:none!important}
+  .sch-wrapper{padding:0;max-width:100%}
+  .sch-doc{box-shadow:none;padding:12px 16px}
+  .sch-table{font-size:11px}
+  .sch-table th{font-size:11.5px;padding:6px 4px}
+  .cell-inner{font-size:11px;padding:4px 6px;min-height:36px}
+  .cell-inner:focus{background:transparent;outline:none}
+  .doc-title h1{font-size:17px}
+  .doc-title h2{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== WIZARD ===== -->
+<div id="wizard">
+  <div class="wiz-brand">
+    <div class="brand-row">
+      <div class="logo-ring">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+          <path d="M4 24V10l6 8 6-8 6 8 6-8v14" stroke="#C8960C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-name">Momentum</div>
+    </div>
+    <div class="wiz-title">מחולל לו"ז מסע בחזרה לעתיד</div>
+    <div class="wiz-sub">ענה על השאלות וקבל לוז מוכן לעריכה ולהדפסה</div>
+  </div>
+
+  <div class="progress">
+    <div class="pdot active" id="dot1"><div class="circle">1</div><div class="plabel">פרטי מסע</div></div>
+    <div class="pline" id="pl1"></div>
+    <div class="pdot" id="dot2"><div class="circle">2</div><div class="plabel">לוגיסטיקת<br>יום א׳</div></div>
+    <div class="pline" id="pl2"></div>
+    <div class="pdot" id="dot3"><div class="circle">3</div><div class="plabel">מסגרת<br>יומית</div></div>
+    <div class="pline" id="pl3"></div>
+    <div class="pdot" id="dot4"><div class="circle">4</div><div class="plabel">הרצאות</div></div>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card active" id="step1">
+    <div class="card-title">📋 פרטי המסע</div>
+    <div class="fg">
+      <label>שם היחידה / הקורס</label>
+      <input type="text" id="unitName" placeholder='לדוגמא: ח"י + 595'>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label>תאריך תחילת המסע — יום א׳</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="fg">
+        <label>מיקום המסע / אכסניה</label>
+        <input type="text" id="location" placeholder="לדוגמא: אולגה, שפיים">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(2)">המשך ←</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card" id="step2">
+    <div class="card-title">📍 לוגיסטיקת יום א׳</div>
+    <div class="frow">
+      <div class="fg">
+        <label>שעת התכנסות לוחמים</label>
+        <input type="time" id="soldiersTime" value="10:00">
+      </div>
+      <div class="fg">
+        <label>מיקום התכנסות לוחמים</label>
+        <input type="text" id="soldiersLoc" placeholder="לדוגמא: וילג׳ חדרה">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label>שעת פגישת מנחים</label>
+        <input type="time" id="staffTime" value="09:00">
+      </div>
+      <div class="fg">
+        <label>מיקום פגישת מנחים</label>
+        <input type="text" id="staffLoc" placeholder="לדוגמא: יער חדרה">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(3)">המשך ←</button>
+      <button class="btn btn-secondary" onclick="goStep(1)">→ חזרה</button>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card" id="step3">
+    <div class="card-title">⏱ מסגרת יומית</div>
+    <div class="frow">
+      <div class="fg">
+        <label>שעת ארוחה חגיגית — יום א׳</label>
+        <input type="time" id="festiveMeal" value="12:00">
+      </div>
+      <div class="fg">
+        <label>שעת סיום יומי (נסיעה לאכסניה)</label>
+        <input type="time" id="dailyEnd" value="17:30">
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label>שעת שיחת הבוקר — ימים ב׳–ד׳</label>
+        <input type="time" id="morningTime" value="08:00">
+      </div>
+      <div class="fg">
+        <label>שעת מעמד הסיום — יום ה׳</label>
+        <input type="time" id="closingTime" value="13:00">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(4)">המשך ←</button>
+      <button class="btn btn-secondary" onclick="goStep(2)">→ חזרה</button>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="card" id="step4">
+    <div class="card-title">🎤 הרצאות ואורחים</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px">לכל הרצאה — בחר יום, שם מרצה ושעות תחילה וסיום</p>
+
+    <div class="lec-block">
+      <div class="lec-block-title">🎖 הרצאת סיירת ניירת</div>
+      <div class="frow4">
+        <div class="fg"><label>יום</label>
+          <select id="l0day">
+            <option value="0">יום א׳</option><option value="1">יום ב׳</option>
+            <option value="2">יום ג׳</option><option value="3">יום ד׳</option><option value="4">יום ה׳</option>
+          </select></div>
+        <div class="fg"><label>שם המרצה</label><input type="text" id="l0lec" placeholder="לדוגמא: איריס"></div>
+        <div class="fg"><label>שעת התחלה</label><input type="time" id="l0start" value="19:30"></div>
+        <div class="fg"><label>שעת סיום</label><input type="time" id="l0end" value="21:00"></div>
+      </div>
+    </div>
+
+    <div class="lec-block">
+      <div class="lec-block-title">📚 הרצאת לימודים</div>
+      <div class="frow4">
+        <div class="fg"><label>יום</label>
+          <select id="l1day">
+            <option value="0">יום א׳</option><option value="1">יום ב׳</option>
+            <option value="2">יום ג׳</option><option value="3" selected>יום ד׳</option><option value="4">יום ה׳</option>
+          </select></div>
+        <div class="fg"><label>שם המרצה</label><input type="text" id="l1lec" placeholder="שם המרצה"></div>
+        <div class="fg"><label>שעת התחלה</label><input type="time" id="l1start" value="19:30"></div>
+        <div class="fg"><label>שעת סיום</label><input type="time" id="l1end" value="21:00"></div>
+      </div>
+    </div>
+
+    <div class="lec-block">
+      <div class="lec-block-title">🚪 הרצאת חוץ: שער לעתיד</div>
+      <div class="frow4">
+        <div class="fg"><label>יום</label>
+          <select id="l2day">
+            <option value="0">יום א׳</option><option value="1" selected>יום ב׳</option>
+            <option value="2">יום ג׳</option><option value="3">יום ד׳</option><option value="4">יום ה׳</option>
+          </select></div>
+        <div class="fg"><label>שם המרצה</label><input type="text" id="l2lec" placeholder="שם המרצה"></div>
+        <div class="fg"><label>שעת התחלה</label><input type="time" id="l2start" value="19:30"></div>
+        <div class="fg"><label>שעת סיום</label><input type="time" id="l2end" value="21:00"></div>
+      </div>
+    </div>
+
+    <div class="lec-block">
+      <div class="lec-block-title">💰 התנהלות כלכלית</div>
+      <div class="frow4">
+        <div class="fg"><label>יום</label>
+          <select id="l3day">
+            <option value="0">יום א׳</option><option value="1">יום ב׳</option>
+            <option value="2" selected>יום ג׳</option><option value="3">יום ד׳</option><option value="4">יום ה׳</option>
+          </select></div>
+        <div class="fg"><label>שם המרצה</label><input type="text" id="l3lec" placeholder="לדוגמא: רנש"></div>
+        <div class="fg"><label>שעת התחלה</label><input type="time" id="l3start" value="19:30"></div>
+        <div class="fg"><label>שעת סיום</label><input type="time" id="l3end" value="21:00"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-gen" onclick="generateSchedule()">🗓&nbsp; צור לוז</button>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="goStep(3)">→ חזרה</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCHEDULE ===== -->
+<div id="schedule">
+  <div class="sch-controls">
+    <button class="btn-back" onclick="backToWizard()">→ חזרה לאשף</button>
+    <button class="btn-print" onclick="window.print()">🖨 הדפס / שמור PDF</button>
+    <span class="edit-hint">✏️ לחץ על תא לעריכה &nbsp;|&nbsp; לחץ ימין על תא ממוזג לפיצול</span>
+  </div>
+  <div class="sch-wrapper">
+    <div class="sch-doc" id="schDoc"></div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div id="ctxMenu" style="display:none"></div>
+
+<script>
+// ── Navigation ──────────────────────────────────────────────
+let cur = 1;
+function goStep(n) {
+  document.getElementById('step'+cur).classList.remove('active');
+  const fromDot = document.getElementById('dot'+cur);
+  fromDot.classList.remove('active');
+  if (n > cur) {
+    fromDot.classList.add('done');
+    for (let i = cur; i < n; i++) {
+      const pl = document.getElementById('pl'+i);
+      if (pl) pl.classList.add('done');
+    }
+  } else {
+    fromDot.classList.remove('done');
+    for (let i = n; i < cur; i++) {
+      const pl = document.getElementById('pl'+i);
+      if (pl) pl.classList.remove('done');
+      const d = document.getElementById('dot'+(i+1));
+      if (d) { d.classList.remove('done'); d.classList.remove('active'); }
+    }
+  }
+  cur = n;
+  document.getElementById('step'+n).classList.add('active');
+  const toDot = document.getElementById('dot'+n);
+  toDot.classList.add('active');
+  toDot.classList.remove('done');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function backToWizard() {
+  document.getElementById('schedule').style.display = 'none';
+  document.getElementById('wizard').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function fmtDate(d) {
+  return d.getDate() + '.' + (d.getMonth()+1) + '.' + String(d.getFullYear()).slice(2);
+}
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+function get(id) { return document.getElementById(id).value; }
+function txt(id) { return document.getElementById(id).value.trim(); }
+
+function timeToRow(t) {
+  const h = parseInt(t.split(':')[0]);
+  return h < 8 ? 0 : h < 9 ? 1 : h < 10 ? 2 : h < 11 ? 3 : h < 13 ? 4 : h < 14 ? 5 : h < 17 ? 6 : h < 18 ? 7 : h < 19 ? 8 : 9;
+}
+
+const TIME_SLOTS = [
+  '07:00 – 07:45','08:00 – 09:00','09:00 – 10:00','10:00 – 11:00',
+  '11:00 – 13:00','13:00 – 14:00','14:00 – 17:00',
+  '17:30 – 18:00','18:30 – 19:30','19:30 – 21:00'
+];
+const DAY_NAMES = ['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳'];
+
+const LOGO_SVG = '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="27" height="27"><path d="M4 24V10l6 8 6-8 6 8 6-8v14" stroke="#C8960C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// ── Schedule generation ──────────────────────────────────────
+function generateSchedule() {
+  const unit    = txt('unitName')     || 'שם היחידה';
+  const dateVal = get('startDate');
+  const loc     = txt('location')     || 'מקום המסע';
+  const solTime = get('soldiersTime') || '10:00';
+  const solLoc  = txt('soldiersLoc')  || 'המתחם';
+  const stTime  = get('staffTime')    || '09:00';
+  const stLoc   = txt('staffLoc')     || 'מיקום הפגישה';
+  const feast   = get('festiveMeal')  || '12:00';
+  const endT    = get('dailyEnd')     || '17:30';
+  const morT    = get('morningTime')  || '08:00';
+  const closeT  = get('closingTime')  || '13:00';
+
+  const start = dateVal ? new Date(dateVal) : new Date();
+  const days  = Array.from({length:5}, (_,i) => fmtDate(addDays(start,i)));
+  const range = fmtDate(start) + '–' + fmtDate(addDays(start,4));
+
+  const G = Array.from({length:10}, () => Array(5).fill(''));
+
+  // Day א (0)
+  G[2][0] = stTime+' פגישת מנחים ב'+stLoc+'\n'+solTime+' הגעת חיילים ל'+solLoc;
+  G[4][0] = 'פתיחת מסע\n'+feast+' ארוחה חגיגית\nהיכרות בקבוצות';
+  G[6][0] = 'שאלונים\nחוזה\nתיאום ציפיות\nשיחות אישיות';
+  G[7][0] = endT+' נסיעה לאכסניה';
+  G[8][0] = 'ארוחת ערב';
+
+  // Breakfast days ב–ה
+  for (let d=1;d<=4;d++) G[0][d]='ארוחת בוקר';
+
+  // Day ב (1)
+  G[1][1] = morT+' שיחת בוקר ויציאה למסלול';
+  G[2][1] = 'מעבר לאזרחות';
+  G[3][1] = 'אוטוביוגרפיה מחלקתית';
+  G[5][1] = 'ארוחת צהריים';
+  G[6][1] = 'תפקידים בקבוצה\nשיחות אישיות';
+  G[7][1] = endT+' נסיעה לאכסניה';
+  G[8][1] = 'ארוחת ערב';
+
+  // Day ג (2)
+  G[1][2] = morT+' שיחת בוקר ויציאה למסלול';
+  G[2][2] = 'אלבום תמונות';
+  G[5][2] = 'ארוחת צהריים';
+  G[6][2] = 'אלבום תמונות\nצידה לדרך\nמעבר לאזרחות';
+  G[7][2] = endT+' נסיעה לאכסניה';
+  G[8][2] = 'ארוחת ערב';
+
+  // Day ד (3)
+  G[1][3] = morT+' שיחת בוקר ויציאה למסלול';
+  G[3][3] = 'כיוונים\nקורות חיים';
+  G[5][3] = 'ארוחת צהריים';
+  G[6][3] = 'הכנה לראיונות עבודה\nנטוורקינג\nתכנון עתיד';
+  G[8][3] = 'ארוחת ערב';
+  G[9][3] = 'ערב חופשי';
+
+  // Day ה (4)
+  G[1][4] = 'יציאה לנקודת שהיה';
+  G[2][4] = 'תכנון עתיד\nקפסולת זמן\nתשליך\nרשת כחולה-אדומה\nסיכום בקבוצה';
+  G[5][4] = 'ארוחת צהריים';
+  const ch = parseInt(closeT.split(':')[0]);
+  const cr = ch<8?0:ch<9?1:ch<10?2:ch<11?3:ch<13?4:ch<14?5:ch<18?6:7;
+  const cc = closeT+' מעמד סיום';
+  G[cr][4] = G[cr][4] ? G[cr][4]+'\n'+cc : cc;
+
+  // Lectures — with custom start/end time
+  const LECS = [
+    'הרצאת סיירת ניירת',
+    'הרצאת לימודים',
+    'הרצאת חוץ: שער לעתיד',
+    'התנהלות כלכלית'
+  ];
+  LECS.forEach((label, i) => {
+    const day   = parseInt(get('l'+i+'day'));
+    const lec   = txt('l'+i+'lec');
+    const lStart = get('l'+i+'start') || '19:30';
+    const lEnd   = get('l'+i+'end')   || '21:00';
+    const row    = timeToRow(lStart);
+    const timeStr = lStart + '–' + lEnd;
+    const t = timeStr + ' | ' + label + (lec ? ' ('+lec+')' : '');
+    G[row][day] = G[row][day] ? G[row][day]+'\n'+t : t;
+  });
+
+  renderSchedule(unit, range, loc, days, G);
+}
+
+// ── Render schedule ──────────────────────────────────────────
+function renderSchedule(unit, range, loc, days, G) {
+  // Compute rowspans per column
+  const spans = Array.from({length:10}, () => Array(5).fill(1));
+  const skip  = Array.from({length:10}, () => Array(5).fill(false));
+
+  for (let d = 0; d < 5; d++) {
+    let spanStart = -1;
+    for (let r = 0; r < 10; r++) {
+      if (G[r][d] !== '') {
+        spanStart = r;
+      } else if (spanStart >= 0) {
+        spans[spanStart][d]++;
+        skip[r][d] = true;
+      }
+    }
+  }
+
+  let thead = '<tr><th class="th-time">שעה</th>';
+  DAY_NAMES.forEach((name, i) => {
+    thead += `<th>${name}<br><span style="font-weight:400;font-size:11px;opacity:.85">${days[i]}</span></th>`;
+  });
+  thead += '</tr>';
+
+  let tbody = '';
+  TIME_SLOTS.forEach((slot, ri) => {
+    tbody += `<tr><td class="time-cell">${slot}</td>`;
+    for (let di = 0; di < 5; di++) {
+      if (skip[ri][di]) continue;
+      const rs      = spans[ri][di];
+      const content = G[ri][di] || '';
+      const rsAttr  = rs > 1 ? ` rowspan="${rs}"` : '';
+      tbody += `<td class="day-cell"${rsAttr} data-row="${ri}" data-day="${di}" data-rowspan="${rs}">` +
+               `<div class="cell-inner" contenteditable="true">${content}</div></td>`;
+    }
+    tbody += '</tr>';
+  });
+
+  document.getElementById('schDoc').innerHTML = `
+    <div class="doc-header">
+      <div class="doc-title">
+        <h1>מחולל לו"ז מסע בחזרה לעתיד — ${unit}</h1>
+        <h2>${range} &nbsp;|&nbsp; ${loc}</h2>
+      </div>
+      <div class="doc-logo-area">
+        <div class="doc-logo-ring">${LOGO_SVG}</div>
+        <div class="doc-logo-name">Momentum</div>
+      </div>
+    </div>
+    <table class="sch-table">
+      <thead>${thead}</thead>
+      <tbody>${tbody}</tbody>
+    </table>
+    <div class="doc-footer">כל תכנית היא בסיס לשינויים!</div>
+  `;
+
+  document.getElementById('wizard').style.display = 'none';
+  document.getElementById('schedule').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Context menu (right-click on merged cells) ───────────────
+let ctxMenu = null;
+
+document.addEventListener('contextmenu', function(e) {
+  const td = e.target.closest('td.day-cell');
+  if (!td) return;
+  const rs = parseInt(td.dataset.rowspan) || 1;
+  if (rs <= 1) return;
+  e.preventDefault();
+
+  // Which sub-row was clicked
+  const rect     = td.getBoundingClientRect();
+  const subRow   = Math.max(0, Math.min(rs - 1, Math.floor((e.clientY - rect.top) / (rect.height / rs))));
+
+  showCtxMenu(e.clientX, e.clientY, [
+    { icon: '✏️', label: 'הכנס טקסט', action: () => doInsertText(td, subRow) },
+    { icon: '⊞',  label: 'פצל תא',    action: () => doSplitCell(td) }
+  ]);
+});
+
+document.addEventListener('click', hideCtxMenu);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtxMenu(); });
+
+function showCtxMenu(x, y, items) {
+  hideCtxMenu();
+  const m = document.createElement('div');
+  m.id = 'ctxMenuEl';
+  m.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:white;border:1px solid #CBD5E0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:9999;min-width:150px;overflow:hidden;font-family:'Assistant',sans-serif;font-size:14px;direction:rtl`;
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:11px 18px;cursor:pointer;display:flex;align-items:center;gap:8px';
+    div.innerHTML = `<span>${item.icon}</span><span>${item.label}</span>`;
+    div.onmouseenter = () => div.style.background = '#EEF2FF';
+    div.onmouseleave = () => div.style.background = 'white';
+    div.onclick = e => { e.stopPropagation(); item.action(); hideCtxMenu(); };
+    m.appendChild(div);
+  });
+  document.body.appendChild(m);
+  ctxMenu = m;
+  // Keep inside viewport
+  const r = m.getBoundingClientRect();
+  if (r.right  > window.innerWidth)  m.style.left = (x - r.width)  + 'px';
+  if (r.bottom > window.innerHeight) m.style.top  = (y - r.height) + 'px';
+}
+
+function hideCtxMenu() {
+  if (ctxMenu) { ctxMenu.remove(); ctxMenu = null; }
+}
+
+// Split merged cell into individual cells
+function doSplitCell(td) {
+  const r  = parseInt(td.dataset.row);
+  const d  = parseInt(td.dataset.day);
+  const rs = parseInt(td.dataset.rowspan);
+  if (rs <= 1) return;
+
+  td.removeAttribute('rowspan');
+  td.dataset.rowspan = '1';
+
+  const tbody = document.querySelector('.sch-table tbody');
+  const trs   = Array.from(tbody.querySelectorAll('tr'));
+
+  for (let i = 1; i < rs; i++) {
+    const tr = trs[r + i];
+    if (!tr) continue;
+    const newTd = makeDayCell(r + i, d);
+    insertTdAt(tr, newTd, d);
+  }
+}
+
+// Split and focus the sub-row that was clicked
+function doInsertText(td, subRow) {
+  const r = parseInt(td.dataset.row);
+  const d = parseInt(td.dataset.day);
+  doSplitCell(td);
+  const targetRow = r + subRow;
+  setTimeout(() => {
+    const target = document.querySelector(`.sch-table td.day-cell[data-row="${targetRow}"][data-day="${d}"]`);
+    if (target) target.querySelector('.cell-inner').focus();
+  }, 30);
+}
+
+function makeDayCell(row, day) {
+  const td = document.createElement('td');
+  td.className = 'day-cell';
+  td.dataset.row     = String(row);
+  td.dataset.day     = String(day);
+  td.dataset.rowspan = '1';
+  const inner = document.createElement('div');
+  inner.className = 'cell-inner';
+  inner.contentEditable = 'true';
+  td.appendChild(inner);
+  return td;
+}
+
+function insertTdAt(tr, newTd, targetDay) {
+  const cells = Array.from(tr.children);
+  for (let i = 1; i < cells.length; i++) {
+    if (parseInt(cells[i].dataset.day) > targetDay) {
+      tr.insertBefore(newTd, cells[i]);
+      return;
+    }
+  }
+  tr.appendChild(newTd);
+}
+</script>
+</body>
+</html>

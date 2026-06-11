@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>בחזרה לעתיד — אשף מסע v2.4</title>
+<title>בחזרה לעתיד — אשף מסע v2.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -86,7 +86,7 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
   <div class="header">
     <h1>🗺️ בחזרה לעתיד</h1>
     <p>אשף יצירת גיליון מסע</p>
-    <span class="version-tag">v2.4</span>
+    <span class="version-tag">v2.5</span>
   </div>
   <div class="card" id="card">
     <div class="steps-bar" id="stepsBar"></div>
@@ -105,8 +105,9 @@ const CONFIG = {
 // ══════════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════════
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 4; // always 4 internally; naval displays 3
 let state = {
+  mode: null,          // 'new' | 'ocr'
   step: 0,
   unitType: null,
   groupStructure: null,
@@ -120,6 +121,16 @@ let state = {
   resultUrl: null,
   error: null,
   scriptCode: null,
+  // OCR mode
+  ocrSheetId: '',
+  ocrGroupCount: 6,
+  ocrGroup: 1,
+  ocrImage: null,
+  ocrData: null,      // [{lastName, firstName, phone}]
+  ocrLoading: false,
+  ocrError: null,
+  ocrConfirmed: false,
+  ocrScript: null,
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -127,6 +138,14 @@ let state = {
 // ══════════════════════════════════════════════════════════════
 function setState(patch) { Object.assign(state, patch); render(); }
 function setField(k, v)  { state[k] = v; const b = document.getElementById('continueBtn'); if(b) b.disabled = !state.unitName || !state.dateStart; }
+function updateSheetId(el) {
+  var v = el.value.trim();
+  var m = v.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  state.ocrSheetId = m ? m[1] : v;
+  if (m) el.value = m[1];
+  var b = document.getElementById('ocrContinueBtn');
+  if (b) b.disabled = !state.ocrSheetId;
+}
 function updateGroupCount(v) {
   const n = Math.max(2, Math.min(20, parseInt(v)||2));
   state.groupCount = n;
@@ -136,20 +155,262 @@ function updateGroupCount(v) {
   if(p) p.innerHTML = Array.from({length:n},(_,j)=>`<div class="group-chip">קבוצה ${j+1}</div>`).join('');
 }
 function render() {
+  if (!state.mode) {
+    document.getElementById('stepsBar').innerHTML = '';
+    document.getElementById('stepContent').innerHTML = stepModeSelect();
+    return;
+  }
+  if (state.mode === 'ocr') {
+    renderOcrStepsBar();
+    document.getElementById('stepContent').innerHTML = renderOcrStep();
+    return;
+  }
   renderStepsBar();
   const fns = [stepUnitType, stepGroupStructure, stepDetails, stepCreate];
   document.getElementById('stepContent').innerHTML = fns[state.step]();
 }
+
+// ══════════════════════════════════════════════════════════════
+//  MODE SELECTION
+// ══════════════════════════════════════════════════════════════
+function stepModeSelect() {
+  return `
+    <div class="step-title">ברוך הבא לאשף 🗺️</div>
+    <div class="step-sub">מה תרצה לעשות?</div>
+    <div class="options">
+      <button class="opt-btn" onclick="setState({mode:'new'})">
+        <span class="opt-icon">🆕</span>
+        <span class="opt-text"><strong>צור גיליון חדש</strong><span>הגדרת מבנה + יצירת Google Sheet</span></span>
+      </button>
+      <button class="opt-btn" onclick="setState({mode:'ocr'})">
+        <span class="opt-icon">📷</span>
+        <span class="opt-text"><strong>הוסף רשימות לגיליון קיים</strong><span>העלאת תמונות חיילים → עדכון אוטומטי</span></span>
+      </button>
+    </div>`;
+}
 function renderStepsBar() {
-  const html = Array.from({length:TOTAL_STEPS}, (_,i) => {
-    const cls = i < state.step ? 'done' : i === state.step ? 'active' : '';
-    const icon = i < state.step ? '✓' : (i+1);
+  // זרוע הים: 3 שלבים (0→2→3), יבשה: 4 שלבים
+  const isNaval = state.unitType === 'naval';
+  const displaySteps = isNaval ? 3 : 4;
+  // map internal step to display step
+  const dispStep = (isNaval && state.step>=2) ? state.step-1 : state.step;
+  const html = Array.from({length:displaySteps}, (_,i) => {
+    const cls = i < dispStep ? 'done' : i === dispStep ? 'active' : '';
+    const icon = i < dispStep ? '✓' : (i+1);
     return `<div class="step-item">
       <div class="step-circle ${cls}">${icon}</div>
-      ${i < TOTAL_STEPS-1 ? `<div class="step-line ${i < state.step ? 'done' : ''}"></div>` : ''}
+      ${i < displaySteps-1 ? `<div class="step-line ${i < dispStep ? 'done' : ''}"></div>` : ''}
     </div>`;
   }).join('');
   document.getElementById('stepsBar').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  OCR FLOW
+// ══════════════════════════════════════════════════════════════
+const OCR_STEPS = ['פרטי גיליון', 'העלאת תמונה', 'אישור נתונים', 'סיום'];
+
+function renderOcrStepsBar() {
+  const html = OCR_STEPS.map((label, i) => {
+    const s = state.ocrStep || 0;
+    const cls = i < s ? 'done' : i === s ? 'active' : '';
+    const icon = i < s ? '✓' : (i+1);
+    return `<div class="step-item">
+      <div class="step-circle ${cls}">${icon}</div>
+      ${i < OCR_STEPS.length-1 ? `<div class="step-line ${i < s ? 'done' : ''}"></div>` : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('stepsBar').innerHTML = html;
+}
+
+function renderOcrStep() {
+  const s = state.ocrStep || 0;
+  if (s === 0) return ocrStepDetails();
+  if (s === 1) return ocrStepUpload();
+  if (s === 2) return ocrStepConfirm();
+  if (s === 3) return ocrStepDone();
+  return '';
+}
+
+function ocrStepDetails() {
+  return `
+    <div class="step-title">פרטי הגיליון הקיים</div>
+    <div class="step-sub">הכנס את ה-ID של הגיליון שיצרת ומספר הקבוצות</div>
+    <div class="field-group">
+      <label class="field-label">ID של הגיליון</label>
+      <input class="field-input" type="text" placeholder="הדבק URL של הגיליון או את ה-ID בלבד"
+        value="${state.ocrSheetId}"
+        oninput="updateSheetId(this)"
+        style="font-size:0.8rem;direction:ltr">
+      <div style="font-size:0.75rem;color:#4a6080;margin-top:4px">מופיע ב-URL של הגיליון: docs.google.com/spreadsheets/d/<strong style="color:#60a5fa">ID</strong>/edit</div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">מספר קבוצות בגיליון</label>
+      <div class="group-count-row">
+        <input type="range" id="ocrGcSlider" min="1" max="20" value="${state.ocrGroupCount}"
+          oninput="state.ocrGroupCount=parseInt(this.value);document.getElementById('ocrGcNum').value=this.value">
+        <input type="number" id="ocrGcNum" class="group-count-num" min="1" max="20" value="${state.ocrGroupCount}"
+          onchange="state.ocrGroupCount=parseInt(this.value);document.getElementById('ocrGcSlider').value=this.value">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="setState({mode:null})">← חזור</button>
+      <button id="ocrContinueBtn" class="btn btn-primary" onclick="if(state.ocrSheetId.trim()) setState({ocrStep:1})"
+        ${!state.ocrSheetId?'disabled':''}>המשך ←</button>
+    </div>`;
+}
+
+function ocrStepUpload() {
+  return `
+    <div class="step-title">העלאת רשימת חיילים</div>
+    <div class="step-sub">בחר קבוצה והעלה תמונת הרשימה</div>
+    <div class="alert alert-warn" style="margin-bottom:16px">
+      🔒 <strong>פרטיות מלאה:</strong> הזיהוי מתבצע <strong>ישירות בדפדפן</strong> — התמונה לא נשלחת לאף שרת חיצוני.<br>
+      בהפעלה ראשונה יורדים נתוני שפה (~4MB), לאחר מכן הכל מקומי.
+    </div>
+    <div class="field-group">
+      <label class="field-label">קבוצה</label>
+      <select class="field-input" onchange="state.ocrGroup=parseInt(this.value)">
+        ${Array.from({length:state.ocrGroupCount},(_,i)=>`<option value="${i+1}" ${state.ocrGroup===i+1?'selected':''}>קבוצה ${i+1}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">תמונת הרשימה</label>
+      <input type="file" accept="image/*" class="field-input" style="padding:8px"
+        onchange="handleOcrImage(this)">
+      ${state.ocrImage ? `<div style="margin-top:8px;color:#4ade80;font-size:0.82rem">✅ תמונה נטענה</div>` : ''}
+    </div>
+    ${state.ocrError ? `<div class="alert alert-error">${state.ocrError}</div>` : ''}
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="setState({ocrStep:0,ocrImage:null,ocrError:null})">← חזור</button>
+      <button class="btn btn-primary" onclick="runOcr()" ${!state.ocrImage||state.ocrLoading?'disabled':''}>
+        ${state.ocrLoading ? '<span class="spinner"></span> מעבד...' : '🔍 חלץ נתונים →'}
+      </button>
+    </div>`;
+}
+
+function ocrStepConfirm() {
+  const rows = state.ocrData || [];
+  return `
+    <div class="step-title">אישור הנתונים — קבוצה ${state.ocrGroup}</div>
+    <div class="step-sub">בדוק וערוך לפי הצורך לפני העדכון</div>
+    <div style="overflow-x:auto;margin-bottom:16px">
+      <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr style="background:#1a3a5c;color:#93c5fd">
+            <th style="padding:6px 8px;text-align:right">#</th>
+            <th style="padding:6px 8px;text-align:right">שם משפחה</th>
+            <th style="padding:6px 8px;text-align:right">שם פרטי</th>
+            <th style="padding:6px 8px;text-align:right">טלפון</th>
+            <th style="padding:6px 8px"></th>
+          </tr>
+        </thead>
+        <tbody id="ocrTableBody">
+          ${rows.map((r,i)=>`
+          <tr style="border-bottom:1px solid #1e2d45">
+            <td style="padding:5px 8px;color:#4a6080">${i+1}</td>
+            <td style="padding:5px 4px"><input style="background:#0b1220;border:1px solid #1e2d45;border-radius:6px;color:#e2e8f0;padding:4px 6px;width:100%;font-family:Heebo;font-size:0.82rem" value="${r.lastName||''}" oninput="state.ocrData[${i}].lastName=this.value"></td>
+            <td style="padding:5px 4px"><input style="background:#0b1220;border:1px solid #1e2d45;border-radius:6px;color:#e2e8f0;padding:4px 6px;width:100%;font-family:Heebo;font-size:0.82rem" value="${r.firstName||''}" oninput="state.ocrData[${i}].firstName=this.value"></td>
+            <td style="padding:5px 4px"><input style="background:#0b1220;border:1px solid #1e2d45;border-radius:6px;color:#e2e8f0;padding:4px 6px;width:90px;font-family:Heebo;font-size:0.82rem;direction:ltr" value="${r.phone||''}" oninput="state.ocrData[${i}].phone=this.value"></td>
+            <td style="padding:5px 4px"><button onclick="state.ocrData.splice(${i},1);render()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem">🗑</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <button onclick="state.ocrData.push({lastName:'',firstName:'',phone:''});render()" 
+        style="margin-top:8px;background:none;border:1px dashed #1e2d45;border-radius:8px;color:#4a6080;padding:6px 14px;cursor:pointer;width:100%;font-family:Heebo">+ הוסף שורה</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="setState({ocrStep:1,ocrData:null,ocrImage:null})">← חזור</button>
+      <button class="btn btn-primary" onclick="buildOcrScript()">צור סקריפט עדכון →</button>
+    </div>`;
+}
+
+function ocrStepDone() {
+  return `
+    <div class="result-box">
+      <div class="result-icon">✅</div>
+      <div class="result-title">הסקריפט מוכן!</div>
+      <div class="result-sub">עדכון קבוצה ${state.ocrGroup} — ${(state.ocrData||[]).length} חיילים</div>
+    </div>
+    <div class="instructions" style="margin-top:12px">
+      <div class="instructions-title">📋 הוראות עדכון</div>
+      <ul>
+        <li data-n="1">פתח את הגיליון ב-Google Sheets</li>
+        <li data-n="2"><strong>Extensions → Apps Script</strong></li>
+        <li data-n="3">הדבק את הפונקציה <strong>בתוך</strong> עורך הסקריפט הקיים (בסוף הקוד)</li>
+        <li data-n="4">▶️ Run → <strong>addGroup_${state.ocrGroup}</strong></li>
+      </ul>
+      <div class="script-box" style="max-height:140px;margin-top:10px">${(state.ocrScript||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:0.85rem"
+        onclick="navigator.clipboard.writeText(state.ocrScript||'').then(()=>{this.textContent='✅ הועתק!'})">📋 העתק קוד</button>
+    </div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="setState({ocrStep:1,ocrData:null,ocrImage:null,ocrScript:null})">📷 קבוצה נוספת</button>
+      <button class="btn btn-ghost" onclick="setState({mode:null,ocrStep:0,ocrSheetId:'',ocrGroup:1,ocrData:null,ocrImage:null,ocrScript:null,ocrError:null})">⟳ התחלה</button>
+    </div>`;
+}
+
+async function handleOcrImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.ocrImage = e.target.result.split(',')[1]; // base64
+    state.ocrImageType = file.type || 'image/jpeg';
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runOcr() {
+  setState({ocrLoading:true, ocrError:null});
+  try {
+    const resp = await fetch('/api/ocr', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: state.ocrImageType || 'image/jpeg', data: state.ocrImage }
+            },
+            {
+              type: 'text',
+              text: 'זוהי רשימת חיילים בעברית. חלץ את הנתונים ל-JSON בלבד, ללא טקסט נוסף, ללא backticks. פורמט: [{"lastName":"...","firstName":"...","phone":"..."}]. שם משפחה קודם, שם פרטי שני. אם אין טלפון — phone יהיה "". אל תכלול תפקידים, רק שמות וטלפונים.'
+            }
+          ]
+        }]
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error?.message || 'שגיאת שרת');
+    const text = data.content?.find(b=>b.type==='text')?.text || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    setState({ocrLoading:false, ocrData:parsed, ocrStep:2});
+  } catch(e) {
+    setState({ocrLoading:false, ocrError:'שגיאה בעיבוד: ' + e.message});
+  }
+}
+
+function buildOcrScript() {
+  const rows = state.ocrData || [];
+  const g = state.ocrGroup;
+  const sheetName = 'קבוצה ' + g;
+  const rowsJson = JSON.stringify(rows.map(r => [r.lastName||'', r.firstName||'', r.phone||'', '']));
+  const script = `function addGroup_${g}() {
+  var ss = SpreadsheetApp.openById('${state.ocrSheetId}');
+  var sh = ss.getSheetByName('${sheetName}');
+  if (!sh) { SpreadsheetApp.getUi().alert('לשונית "${sheetName}" לא נמצאה'); return; }
+  var data = ${rowsJson};
+  sh.getRange(sh.getLastRow()+1, 1, data.length, data[0].length).setValues(data);
+  SpreadsheetApp.getUi().alert('✅ עודכנו ' + data.length + ' שורות בלשונית ${sheetName}');
+}`;
+  setState({ocrScript: script, ocrStep:3});
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -162,11 +423,11 @@ function stepUnitType() {
     <div class="options">
       <button class="opt-btn ${state.unitType==='naval'?'selected':''}" onclick="sel('unitType','naval')">
         <span class="opt-icon">⚓</span>
-        <span class="opt-text"><strong>חיל הים / חיל האוויר</strong><span>עמודות: יחידה + מסגרת | מ"פ</span></span>
+        <span class="opt-text"><strong>זרוע הים</strong><span>עמודות: יחידה + מסגרת | מ"פ + מ"מ</span></span>
       </button>
       <button class="opt-btn ${state.unitType==='ground'?'selected':''}" onclick="sel('unitType','ground')">
         <span class="opt-icon">🪖</span>
-        <span class="opt-text"><strong>זרוע היבשה</strong><span>עמודות: גד' + פלוגה + מחלקה | מ"פ + מ"מ</span></span>
+        <span class="opt-text"><strong>זרוע היבשה וחיל האוויר</strong><span>עמודות: גד' + פלוגה + מחלקה | מ"פ + מ"מ</span></span>
       </button>
     </div>
     <div class="btn-row">
@@ -206,7 +467,7 @@ function stepGroupStructure() {
 //  STEP 3: Details
 // ══════════════════════════════════════════════════════════════
 function stepDetails() {
-  const ph = state.unitType==='naval' ? "חיל הים / חטיבה 7..." : "גד' 51 / חטיבה 215...";
+  const ph = state.unitType==='naval' ? "חיל הים / שייטת 13..." : "גד' 51 / חטיבה 215...";
   return `
     <div class="step-title">פרטי המסע</div>
     <div class="step-sub">מלא את הפרטים — הם ישמשו לשם הגיליון ולכל ה-labels</div>
@@ -269,7 +530,7 @@ function renderConnectScreen() {
         ['יחידה', state.unitName],
         ['תאריכים', state.dateStart + (state.dateEnd?' — '+state.dateEnd:'')],
         ['מספר קבוצות', state.groupCount],
-        ['מבנה', isNaval ? 'יחידה + מסגרת | מ"פ' : "גד' + פלוגה + מחלקה | מ\"פ + מ\"מ"],
+        ['מבנה', isNaval ? 'יחידה + מסגרת | מ"פ + מ"מ' : "גד' + פלוגה + מחלקה | מ\"פ + מ\"מ"],
         ['שם הגיליון', label],
       ].map(([l,v])=>`
         <div class="summary-row">
@@ -333,7 +594,8 @@ function renderResult() {
       <button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:0.85rem" onclick="copyExportScript()" id="copyScriptBtn">📋 העתק קוד</button>
     </div>
     <div class="btn-row" style="margin-top:16px">
-      <button class="btn btn-ghost" onclick="setState({step:0,unitType:null,groupStructure:null,unitName:'',dateStart:'',dateEnd:'',groupCount:6,accessToken:null,creating:false,progressStep:-1,resultUrl:null,error:null,scriptCode:null})">⟳ מסע חדש</button>
+      <button class="btn btn-ghost" onclick="setState({mode:null,step:0,unitType:null,groupStructure:null,unitName:'',dateStart:'',dateEnd:'',groupCount:6,accessToken:null,creating:false,progressStep:-1,resultUrl:null,error:null,scriptCode:null,sheetId:null})">⟳ מסע חדש</button>
+      <button class="btn btn-primary" onclick="setState({mode:'ocr',ocrSheetId:state.sheetId,ocrStep:1})">📷 הוסף רשימות לגיליון זה</button>
     </div>`;
 }
 
@@ -375,12 +637,14 @@ async function doCreateSheet(token) {
 
     // ── Column definitions ──────────────────────────────────
     const icHeaders = isNaval
-      ? ['קבוצה','יחידה','מסגרת','כמות','אישרו','קבוצת ווטסאפ','שם מ"פ','טלפון מ"פ','מנחה 1','מנחה 2',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'",'מסלול יום ג\'',"יום ד'",'יום ה\'']
+      // זרוע הים: ללא פרטי מ"פ/מ"מ
+      ? ['קבוצה','יחידה','מסגרת','כמות','אישרו','קבוצת ווטסאפ','מנחה 1','מנחה 2',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'",'מסלול יום ג\'',"יום ד'",'יום ה\'']
+      // זרוע היבשה וחיל האוויר: כולל פרטי מ"פ + מ"מ
       : ['קבוצה',"גד'",'פלוגה','מחלקה','כמות','אישרו','קבוצת ווטסאפ','שם מ"פ','טלפון מ"פ','שם מ"מ','טלפון מ"מ','מנחה 1','מנחה 2',"יום א' התייצבות",'אוטובוס',"מסלול יום ב'",'מסלול יום ג\'',"יום ד'",'יום ה\''];
 
-    // Guide columns (0-based): naval guide1=I(8),guide2=J(9) | ground guide1=L(11),guide2=M(12)
-    const guide1Col = isNaval ? 'I' : 'L';
-    const guide2Col = isNaval ? 'J' : 'M';
+    // Guide columns: naval guide1=G(6),guide2=H(7) | ground guide1=L(11),guide2=M(12)
+    const guide1Col = isNaval ? 'G' : 'L';
+    const guide2Col = isNaval ? 'H' : 'M';
 
     const solHdr  = ['שם משפחה','שם פרטי','טלפון', isNaval ? 'יחידת רישום' : 'יחידה', 'רגישות מזון'];
     const pkHdr   = ['קבוצה','שם פרטי','שם משפחה','טלפון','מנחה'];
@@ -464,9 +728,7 @@ async function doCreateSheet(token) {
       reqs.push({ updateSheetProperties: { properties: { sheetId: gid, gridProperties: { frozenRowCount: 2 } }, fields: 'gridProperties.frozenRowCount' } });
 
       // Row 0: merged title — live formula from איכון
-      const titleFormula = isNaval
-        ? `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," - "&'איכון'!C${icRow},"")&" | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`
-        : `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," | "&'איכון'!C${icRow},"")&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`;
+      const titleFormula = `="קב' ${g} - "&'איכון'!B${icRow}&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`;
       reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
       reqs.push({
         updateCells: {
@@ -494,7 +756,7 @@ async function doCreateSheet(token) {
     const batchRes = await sheetsReq(`/${sid}:batchUpdate`, 'POST', { requests: reqs }, token);
     if (batchRes.error) throw new Error(`batchUpdate: ${batchRes.error.code} — ${batchRes.error.message}`);
 
-    setState({ creating: false, resultUrl: `https://docs.google.com/spreadsheets/d/${sid}`, scriptCode: buildExportScript(label) });
+    setState({ creating: false, sheetId: sid, resultUrl: `https://docs.google.com/spreadsheets/d/${sid}`, scriptCode: buildExportScriptInner(label, state.unitType==='naval') });
 
   } catch(e) {
     setState({ creating: false, error: e.message || 'שגיאה לא ידועה' });
@@ -552,8 +814,21 @@ function hexToRgb(hex) {
 //  NAVIGATION & UTILS
 // ══════════════════════════════════════════════════════════════
 function sel(k,v)  { setState({[k]:v}); }
-function nextStep(){ if(state.step<TOTAL_STEPS-1) setState({step:state.step+1}); }
-function prevStep(){ if(state.step>0) setState({step:state.step-1}); }
+function nextStep(){
+  if(state.step<TOTAL_STEPS-1){
+    // זרוע הים מדלגת על שלב 2 (מבנה קבוצות)
+    const next = (state.step===0 && state.unitType==='naval') ? 2 : state.step+1;
+    if(next===2 && state.unitType==='naval') setState({step:next, groupStructure:'single'});
+    else setState({step:next});
+  }
+}
+function prevStep(){
+  if(state.step>0){
+    // זרוע הים מדלגת חזרה על שלב 2
+    const prev = (state.step===2 && state.unitType==='naval') ? 0 : state.step-1;
+    setState({step:prev});
+  }
+}
 
 function buildLabel() {
   let dateLabel = '';
@@ -569,6 +844,12 @@ function buildLabel() {
 //  EXPORT SCRIPT GENERATOR
 // ══════════════════════════════════════════════════════════════
 function buildExportScript(label) {
+  const isNaval = state.unitType === 'naval';
+  const nameCol = isNaval ? 2 : 2; // both use col B (index 2) for primary unit name
+  return buildExportScriptInner(label, isNaval);
+}
+function buildExportScriptInner(label, isNaval) {
+  const nameColLetter = isNaval ? 'B' : 'B'; // יחידה / גד'
   return `function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('📤 ייצוא')
@@ -582,6 +863,21 @@ function buildExportScript(label) {
 }
 
 var MASA_LABEL = "${label}";
+
+function onEdit(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = e ? e.range.getSheet() : null;
+  if (!sh || sh.getName() !== 'איכון') return;
+  var row = e.range.getRow();
+  if (row < 3) return; // שורת כותרת
+  var groupNum = row - 2; // קבוצה 1 = שורה 3
+  var unitName = sh.getRange(row, 2).getValue(); // עמודה B
+  var groupSheet = ss.getSheetByName('קבוצה ' + groupNum);
+  if (!groupSheet) return;
+  var newName = unitName ? "קב' " + groupNum + ' - ' + unitName : 'קבוצה ' + groupNum;
+  if (newName.length > 31) newName = newName.substring(0, 31);
+  groupSheet.setName(newName);
+}
 
 function exportAllVCF() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();

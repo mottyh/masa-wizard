@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>בחזרה לעתיד — אשף מסע v2.6</title>
+<title>בחזרה לעתיד — אשף מסע v2.7</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -86,7 +86,7 @@ body{font-family:'Heebo',sans-serif;direction:rtl;background:#0b1220;color:#e2e8
   <div class="header">
     <h1>🗺️ בחזרה לעתיד</h1>
     <p>אשף יצירת גיליון מסע</p>
-    <span class="version-tag">v2.6</span>
+    <span class="version-tag">v2.7</span>
   </div>
   <div class="card" id="card">
     <div class="steps-bar" id="stepsBar"></div>
@@ -675,7 +675,7 @@ async function doCreateSheet(token) {
     const guide1Col = isNaval ? 'G' : 'L';
     const guide2Col = isNaval ? 'H' : 'M';
 
-    const solHdr  = ['שם משפחה','שם פרטי','טלפון', isNaval ? 'יחידת רישום' : 'יחידה', 'רגישות מזון'];
+    const solHdr  = ['מס.', 'שם משפחה','שם פרטי','טלפון', isNaval ? 'יחידת רישום' : 'יחידה', 'רגישות מזון'];
     const pkHdr   = ['קבוצה','שם פרטי','שם משפחה','טלפון','מנחה'];
     const expHdr  = ['Name','Given Name','Family Name','Mobile Phone','Notes'];
     const NUM_SOL = solHdr.length;
@@ -775,7 +775,7 @@ async function doCreateSheet(token) {
 
       // Row 0: merged title — live formula from איכון
       const titleFormula = isNaval
-        ? `="קב' ${g} - "&'איכון'!B${icRow}&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`
+        ? `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," - "&'איכון'!C${icRow},"")&" | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`
         : `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," | "&'איכון'!C${icRow},"")&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`;
       reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
       reqs.push({
@@ -788,6 +788,17 @@ async function doCreateSheet(token) {
 
       // Row 1: column headers
       reqs.push(makeCellsReq(gid, HDR_ROW, solHdr, '#0d3349', NUM_SOL));
+
+      // Col A (מס.): serial number formulas for up to 50 data rows
+      reqs.push({
+        updateCells: {
+          range: { sheetId: gid, startRowIndex: 2, endRowIndex: 52, startColumnIndex: 0, endColumnIndex: 1 },
+          rows: Array.from({length:50}, (_, i) => ({
+            values: [{ userEnteredValue: { formulaValue: `=IF(B${i+3}<>"",ROW()-2,"")` } }]
+          })),
+          fields: 'userEnteredValue',
+        }
+      });
     }
 
     // ── פקל שמות ────────────────────────────────────────────
@@ -897,41 +908,56 @@ function buildExportScript(label) {
   return buildExportScriptInner(label, isNaval);
 }
 function buildExportScriptInner(label, isNaval) {
-  const nameColLetter = isNaval ? 'B' : 'B'; // יחידה / גד'
   return `function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('📤 ייצוא')
     .addItem('הורד VCF — כל הקבוצות', 'exportAllVCF')
     .addItem('הורד VCF — קבוצה פעילה', 'exportActiveVCF')
     .addSeparator()
-    .addItem('ייצא ל-Google Contacts', 'exportToContacts')
+    .addItem('ייצא ל-Google Contacts — קבוצה פעילה', 'exportActiveContacts')
+    .addItem('ייצא ל-Google Contacts — כל הקבוצות', 'exportAllContacts')
     .addSeparator()
     .addItem('התאם רוחב עמודות', 'autoResizeAll')
     .addToUi();
 }
 
-var MASA_LABEL = "${label}";
+var ADMIN_EMAIL = "motty@metsuyanim.org";
 
+function getMasaLabel() {
+  try {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('איכון');
+    if (sh) return String(sh.getRange('A1').getValue()).trim();
+  } catch(e) {}
+  return SpreadsheetApp.getActiveSpreadsheet().getName();
+}
+
+// col indices in group sheets: A=מס.(0), B=שם משפחה(1), C=שם פרטי(2), D=טלפון(3)
 function onEdit(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = e ? e.range.getSheet() : null;
-  if (!sh || sh.getName() !== 'איכון') return;
+  if (!e) return;
+  var sh = e.range.getSheet();
+  if (sh.getName() !== 'איכון') return;
   var row = e.range.getRow();
-  if (row < 3) return; // שורת כותרת
-  var groupNum = row - 2; // קב' 1 = שורה 3
-  var unitName = sh.getRange(row, 2).getValue(); // עמודה B
-  var groupSheet = ss.getSheetByName("קב' " + groupNum);
+  if (row < 3) return;
+  var groupNum = row - 2;
+  var unitName = String(sh.getRange(row, 2).getValue()).trim();
+  var ss = e.source;
+  var prefix = "קב' " + groupNum;
+  var groupSheet = ss.getSheets().filter(function(s) {
+    var n = s.getName();
+    return n === prefix || n.indexOf(prefix + ' ') === 0 || n.indexOf(prefix + '-') === 0;
+  })[0];
   if (!groupSheet) return;
-  var newName = unitName ? "קב' " + groupNum + ' - ' + unitName : "קב' " + groupNum;
+  var newName = unitName ? prefix + ' - ' + unitName : prefix;
   if (newName.length > 31) newName = newName.substring(0, 31);
   groupSheet.setName(newName);
 }
 
 function exportAllVCF() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var label = getMasaLabel();
   var vcf = '';
   ss.getSheets().forEach(function(sh) {
-    if (sh.getName().indexOf("קב'") === 0) vcf += sheetToVCF(sh);
+    if (sh.getName().indexOf("קב'") === 0) vcf += sheetToVCF(sh, label);
   });
   downloadVCF(vcf, 'כל_הקבוצות.vcf');
 }
@@ -942,50 +968,62 @@ function exportActiveVCF() {
     SpreadsheetApp.getUi().alert("עבור ללשונית קב' לפני הייצוא");
     return;
   }
-  downloadVCF(sheetToVCF(sh), sh.getName() + '.vcf');
+  downloadVCF(sheetToVCF(sh, getMasaLabel()), sh.getName() + '.vcf');
 }
 
-function sheetToVCF(sh) {
+function sheetToVCF(sh, label) {
   var data = sh.getDataRange().getValues();
   var vcf = '';
   for (var r = 2; r < data.length; r++) {
     var row = data[r];
-    var last = row[0] || '', first = row[1] || '';
+    var last = String(row[1] || '').trim(), first = String(row[2] || '').trim();
     if (!last && !first) continue;
-    var phone = String(row[2] || '');
+    var phone = String(row[3] || '').trim();
     vcf += 'BEGIN:VCARD\\nVERSION:3.0\\n';
-    vcf += 'N:' + last + ';' + first + ';;;\\n';
-    vcf += 'FN:' + last + ' | ' + MASA_LABEL + '\\n';
+    vcf += 'N:' + last + ' | ' + label + ';' + first + ';;;\\n';
+    vcf += 'FN:' + first + ' ' + last + '\\n';
     if (phone) vcf += 'TEL;TYPE=CELL:' + phone + '\\n';
     vcf += 'END:VCARD\\n';
   }
   return vcf;
 }
 
-function exportToContacts() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+function exportActiveContacts() {
+  var sh = SpreadsheetApp.getActiveSheet();
+  if (sh.getName().indexOf("קב'") !== 0) {
+    SpreadsheetApp.getUi().alert("עבור ללשונית קב' לפני הייצוא");
+    return;
+  }
+  _doExportContacts([sh]);
+}
+
+function exportAllContacts() {
+  if (Session.getActiveUser().getEmail() !== ADMIN_EMAIL) {
+    SpreadsheetApp.getUi().alert('אפשרות זו זמינה רק למנהל הקובץ');
+    return;
+  }
+  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets()
+    .filter(function(s) { return s.getName().indexOf("קב'") === 0; });
+  _doExportContacts(sheets);
+}
+
+function _doExportContacts(sheets) {
+  var label = getMasaLabel();
   var created = 0, skipped = 0;
-  ss.getSheets().forEach(function(sh) {
-    if (sh.getName().indexOf("קב'") !== 0) return;
+  sheets.forEach(function(sh) {
     var data = sh.getDataRange().getValues();
     for (var r = 2; r < data.length; r++) {
       var row = data[r];
-      var last = String(row[0] || '').trim();
-      var first = String(row[1] || '').trim();
+      var last = String(row[1] || '').trim();
+      var first = String(row[2] || '').trim();
       if (!last && !first) continue;
-      var phone = String(row[2] || '').trim();
+      var phone = String(row[3] || '').trim();
       try {
-        var contact = {
-          names: [{ familyName: last, givenName: first, displayName: last + ' | ' + MASA_LABEL }],
-        };
-        if (phone) {
-          contact.phoneNumbers = [{ value: phone, type: 'mobile' }];
-        }
+        var contact = { names: [{ familyName: last + ' | ' + label, givenName: first }] };
+        if (phone) contact.phoneNumbers = [{ value: phone, type: 'mobile' }];
         People.People.createContact(contact);
         created++;
-      } catch(e) {
-        skipped++;
-      }
+      } catch(e) { skipped++; }
     }
   });
   SpreadsheetApp.getUi().alert('✅ נוצרו ' + created + ' אנשי קשר' + (skipped ? ' | דולגו: ' + skipped : ''));

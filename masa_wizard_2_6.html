@@ -332,7 +332,7 @@ function ocrStepUpload() {
       ${entries.map((entry, idx) => `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#0f1d30;border-radius:8px;border:1px solid #1e2d45">
         <select style="${inp};min-width:80px" onchange="state.ocrEntries[${idx}].group=parseInt(this.value)">
-          ${Array.from({length:state.ocrGroupCount},(_,i)=>`<option value="${i+1}" ${entry.group===i+1?'selected':''}>קב' ${i+1}</option>`).join('')}
+          ${Array.from({length:state.ocrGroupCount},(_,i)=>`<option value="${i+1}" ${entry.group===i+1?'selected':''}>קב ${i+1}</option>`).join('')}
         </select>
         ${entry.image
           ? `<span style="flex:1;color:#4ade80;font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✅ ${entry.fileName||'תמונה נטענה'}</span>
@@ -360,7 +360,7 @@ function ocrStepConfirm() {
     <div class="step-sub">בדוק וערוך לפי הצורך לפני יצירת הסקריפט</div>
     ${groups.map((gd, gi) => `
       <div style="margin-bottom:20px">
-        <div style="color:#60a5fa;font-weight:600;margin-bottom:8px;font-size:0.9rem">קב' ${gd.group} — ${gd.data.length} חיילים</div>
+        <div style="color:#60a5fa;font-weight:600;margin-bottom:8px;font-size:0.9rem">קב ${gd.group} — ${gd.data.length} חיילים</div>
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
             <thead>
@@ -397,7 +397,7 @@ function ocrStepConfirm() {
 function ocrStepDone() {
   const groups = state.ocrGroupsData || [];
   const totalSoldiers = groups.reduce((sum, gd) => sum + gd.data.length, 0);
-  const groupNums = groups.map(gd => `קב' ${gd.group}`).join(', ');
+  const groupNums = groups.map(gd => `קב ${gd.group}`).join(', ');
   return `
     <div class="result-box">
       <div class="result-icon">✅</div>
@@ -426,7 +426,7 @@ function buildOcrScript() {
   const groups = state.ocrGroupsData || [];
   const functions = groups.map(gd => {
     const g = gd.group;
-    const sheetName = "קב' " + g;
+    const sheetName = "קב " + g;
     const rowsJson = JSON.stringify(gd.data.map(r => [r.lastName||'', r.firstName||'', r.phone||'']));
     return `function populateGroup${g}() {
   var ss = SpreadsheetApp.openById('${state.ocrSheetId}');
@@ -682,10 +682,10 @@ async function doCreateSheet(token) {
     const HDR_ROW = 1; // row index of column headers in group sheets (0=title, 1=headers, 2+=soldiers)
 
     // ── 1. Create spreadsheet ────────────────────────────────
-    // Tab order: איכון (0), קב' 1..N (1..N), פקל שמות (N+1)
+    // Tab order: איכון (0), קב 1..N (1..N), פקל שמות (N+1)
     const sheetDefs = [
       { properties: { title: 'איכון',    index: 0 } },
-      ...Array.from({length:n}, (_,i) => ({ properties: { title: `קב' ${i+1}`, index: i+1 } })),
+      ...Array.from({length:n}, (_,i) => ({ properties: { title: `קב ${i+1}`, index: i+1 } })),
       { properties: { title: 'פקל שמות', index: n+1 } },
       { properties: { title: 'EXPORT',   index: n+2 } },
     ];
@@ -736,7 +736,7 @@ async function doCreateSheet(token) {
       updateCells: {
         range: { sheetId: icId, startRowIndex: 2, endRowIndex: 2+n, startColumnIndex: 0, endColumnIndex: icHeaders.length },
         rows: Array.from({length:n}, (_,i) => ({
-          values: [`קב' ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v } }))
+          values: [`קב ${i+1}`, ...Array(icHeaders.length-1).fill('')].map(v => ({ userEnteredValue: { stringValue: v } }))
         })),
         fields: 'userEnteredValue',
       }
@@ -767,7 +767,7 @@ async function doCreateSheet(token) {
 
     // ── Group sheets ────────────────────────────────────────
     for (let g = 1; g <= n; g++) {
-      const gid = sheetMap[`קב' ${g}`];
+      const gid = sheetMap[`קב ${g}`];
       const icRow = g + 2; // איכון: row1=title, row2=headers, row3+=data
 
       // Freeze 2 rows (title + column headers)
@@ -775,8 +775,8 @@ async function doCreateSheet(token) {
 
       // Row 0: merged title — live formula from איכון
       const titleFormula = isNaval
-        ? `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," - "&'איכון'!C${icRow},"")&" | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`
-        : `="קב' ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," | "&'איכון'!C${icRow},"")&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`;
+        ? `="קב ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," - "&'איכון'!C${icRow},"")&" | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`
+        : `="קב ${g} - "&'איכון'!B${icRow}&IF('איכון'!C${icRow}<>""," | "&'איכון'!C${icRow},"")&" | ${label} | מנחים: "&'איכון'!${guide1Col}${icRow}&IF('איכון'!${guide2Col}${icRow}<>""," ו"&'איכון'!${guide2Col}${icRow},"")`;
       reqs.push({ mergeCells: { range: { sheetId: gid, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: NUM_SOL }, mergeType: 'MERGE_ALL' } });
       reqs.push({
         updateCells: {
@@ -941,7 +941,7 @@ function onEdit(e) {
   var groupNum = row - 2;
   var unitName = String(sh.getRange(row, 2).getValue()).trim();
   var ss = e.source;
-  var prefix = "קב' " + groupNum;
+  var prefix = "קב " + groupNum;
   var groupSheet = ss.getSheets().filter(function(s) {
     var n = s.getName();
     return n === prefix || n.indexOf(prefix + ' ') === 0 || n.indexOf(prefix + '-') === 0;
@@ -957,15 +957,15 @@ function exportAllVCF() {
   var label = getMasaLabel();
   var vcf = '';
   ss.getSheets().forEach(function(sh) {
-    if (sh.getName().indexOf("קב'") === 0) vcf += sheetToVCF(sh, label);
+    if (sh.getName().indexOf("קב") === 0) vcf += sheetToVCF(sh, label);
   });
   downloadVCF(vcf, 'כל_הקבוצות.vcf');
 }
 
 function exportActiveVCF() {
   var sh = SpreadsheetApp.getActiveSheet();
-  if (sh.getName().indexOf("קב'") !== 0) {
-    SpreadsheetApp.getUi().alert("עבור ללשונית קב' לפני הייצוא");
+  if (sh.getName().indexOf("קב") !== 0) {
+    SpreadsheetApp.getUi().alert("עבור ללשונית קב לפני הייצוא");
     return;
   }
   downloadVCF(sheetToVCF(sh, getMasaLabel()), sh.getName() + '.vcf');
@@ -990,8 +990,8 @@ function sheetToVCF(sh, label) {
 
 function exportActiveContacts() {
   var sh = SpreadsheetApp.getActiveSheet();
-  if (sh.getName().indexOf("קב'") !== 0) {
-    SpreadsheetApp.getUi().alert("עבור ללשונית קב' לפני הייצוא");
+  if (sh.getName().indexOf("קב") !== 0) {
+    SpreadsheetApp.getUi().alert("עבור ללשונית קב לפני הייצוא");
     return;
   }
   _doExportContacts([sh]);
@@ -1003,7 +1003,7 @@ function exportAllContacts() {
     return;
   }
   var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets()
-    .filter(function(s) { return s.getName().indexOf("קב'") === 0; });
+    .filter(function(s) { return s.getName().indexOf("קב") === 0; });
   _doExportContacts(sheets);
 }
 
